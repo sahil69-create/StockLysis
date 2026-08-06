@@ -45,7 +45,7 @@ function renderTable(positions) {
         </div>
         <div>
           <p class="text-[10px] text-slate-500 uppercase tracking-wider">Qty</p>
-          <p class="font-semibold text-sky-300 tabular-nums mt-0.5">${totalQty}</p>
+          <p class="font-semibold text-emerald-300 tabular-nums mt-0.5">${totalQty}</p>
         </div>
         <div>
           <p class="text-[10px] text-slate-500 uppercase tracking-wider">Win / Loss</p>
@@ -74,7 +74,7 @@ function renderTable(positions) {
                style="background: linear-gradient(135deg, hsl(${hue} 70% 52%), hsl(${(hue+40)%360} 70% 45%)); box-shadow: 0 6px 16px -6px hsl(${hue} 70% 50% / .6);">
             ${p.symbol.slice(0,2).toUpperCase()}
           </div>
-          <p class="font-bold text-sky-400 tracking-tight">${escapeHtml(p.symbol)}</p>
+          <p class="font-bold text-emerald-400 tracking-tight">${escapeHtml(p.symbol)}</p>
         </div>
       </td>
       <td class="px-4 py-3.5 text-right text-slate-300 tabular-nums">${formatNumber(p.quantity, 0)}</td>
