@@ -280,9 +280,9 @@ function renderDonut(slices, totalValue) {
           <title>${escapeHtml(s.label)} — ${formatINR(s.value)} (${s.percent.toFixed(1)}%)</title>
         </path>`).join("")}
       <g class="donut-center" text-anchor="middle" dominant-baseline="middle" transform="translate(${cx},${cy})">
-        <text font-size="14" fill="#64748b" y="-16">Portfolio</text>
-        <text font-size="20" font-weight="800" y="6" fill="#f1f5f9">${centerValue}</text>
-        <text font-size="11" y="24" fill="#64748b">${slices.length} stocks</text>
+        <text font-size="14" fill="#64748b" y="-22">Portfolio</text>
+        <text font-size="20" font-weight="800" y="2" fill="#f1f5f9">${centerValue}</text>
+        <text font-size="11" y="20" fill="#64748b">${slices.length} stocks</text>
       </g>
     </svg>`;
 
