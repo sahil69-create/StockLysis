@@ -14,6 +14,11 @@
   <link rel="shortcut icon" type="image/jpeg" href="https://files.catbox.moe/md1fro.jpg" />
   <link rel="apple-touch-icon" href="https://files.catbox.moe/md1fro.jpg" />
 
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Dashboard — Portfolio" />
@@ -35,6 +40,9 @@
         extend: {
           colors: {
             brand: '#0ea5e9',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
           }
         }
       }
@@ -47,7 +55,10 @@
   <!-- ── Sidebar ── -->
   <aside class="sidebar w-60 shrink-0 bg-slate-800 border-r border-slate-700 flex flex-col min-h-screen">
     <div class="px-6 py-5 border-b border-slate-700">
-      <span class="text-xl font-bold text-sky-400">📈 Portfolio</span>
+      <span class="text-xl font-bold text-sky-400 flex items-center gap-2">
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-lg shadow-sky-500/30">📈</span>
+        Portfolio
+      </span>
     </div>
     <nav class="flex-1 px-3 py-4 space-y-1 text-sm font-medium">
       <a href="dashboard.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
@@ -93,7 +104,10 @@
           <span></span>
           <span></span>
         </button>
-        <h1 class="text-lg font-semibold">Dashboard</h1>
+        <div>
+          <h1 class="text-lg font-semibold tracking-tight">Dashboard</h1>
+          <p class="text-xs text-slate-500 mt-0.5 hidden sm:block">Real-time overview of your portfolio</p>
+        </div>
       </div>
       <div class="flex items-center gap-3 flex-wrap">
         <span id="last-updated" class="text-xs text-slate-500 hidden sm:block"></span>
@@ -110,42 +124,80 @@
     <!-- Content -->
     <div class="flex-1 overflow-y-auto p-6 space-y-6">
 
-      <!-- Stat Cards -->
+      <!-- Stat Cards with mini sparklines -->
       <div id="stat-cards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <!-- filled by JS -->
       </div>
 
-      <!-- Middle row: Movers + Allocation -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Middle row: Allocation Donut + Movers -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Allocation Donut Chart -->
+        <div class="lg:col-span-1 bg-slate-800 rounded-xl p-5 border border-slate-700 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-semibold text-slate-300">Portfolio Allocation</h2>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500">By Holding</span>
+          </div>
+          <div class="flex-1 flex items-center justify-center">
+            <div id="donut-chart" class="w-full max-w-[280px] aspect-square">
+              <!-- SVG donut rendered by JS -->
+            </div>
+          </div>
+          <div id="donut-legend" class="mt-4 space-y-2 text-xs max-h-40 overflow-y-auto pr-1">
+            <!-- legend items -->
+          </div>
+        </div>
+
+        <!-- P&L per Holding (Horizontal Bar chart) -->
+        <div class="lg:col-span-1 bg-slate-800 rounded-xl p-5 border border-slate-700 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-semibold text-slate-300">P&amp;L Per Stock</h2>
+            <span class="text-[10px] uppercase tracking-wider text-slate-500">Top 8</span>
+          </div>
+          <div id="pnl-bars" class="flex-1 space-y-2.5 overflow-y-auto pr-1">
+            <!-- horizontal P&L bars -->
+          </div>
+        </div>
 
         <!-- Top Gainers & Losers -->
-        <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <div class="lg:col-span-1 bg-slate-800 rounded-xl p-5 border border-slate-700">
           <h2 class="text-sm font-semibold text-slate-300 mb-4">Top Movers</h2>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <p class="text-xs text-slate-500 uppercase tracking-wider mb-2">Gainers</p>
+              <p class="text-xs text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                Gainers
+              </p>
               <ul id="gainers-list" class="space-y-2 text-sm"></ul>
             </div>
             <div>
-              <p class="text-xs text-slate-500 uppercase tracking-wider mb-2">Losers</p>
+              <p class="text-xs text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                Losers
+              </p>
               <ul id="losers-list" class="space-y-2 text-sm"></ul>
             </div>
           </div>
         </div>
 
-        <!-- Portfolio Allocation -->
-        <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
-          <h2 class="text-sm font-semibold text-slate-300 mb-4">Portfolio Allocation</h2>
-          <div id="allocation-chart" class="space-y-2"></div>
-        </div>
+      </div>
 
+      <!-- Analysis / Insight Cards -->
+      <div id="analysis-row" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Best performer, Worst performer, Diversification score -->
       </div>
 
       <!-- Recent Holdings preview -->
       <div class="bg-slate-800 rounded-xl border border-slate-700">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-700">
-          <h2 class="text-sm font-semibold text-slate-300">Holdings Preview</h2>
-          <a href="holdings.html" class="text-xs text-sky-400 hover:underline">View all →</a>
+          <div>
+            <h2 class="text-sm font-semibold text-slate-300">Holdings Preview</h2>
+            <p class="text-xs text-slate-500 mt-0.5 hidden sm:block">Top holdings with live P&amp;L</p>
+          </div>
+          <a href="holdings.html" class="text-xs text-sky-400 hover:underline flex items-center gap-1">
+            View all
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
         </div>
         <div id="holdings-preview" class="overflow-x-auto table-container"></div>
       </div>
