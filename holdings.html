@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Holdings — Portfolio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: '#0ea5e9' } } } }
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside class="w-60 shrink-0 bg-slate-800 border-r border-slate-700 flex flex-col min-h-screen">
+    <div class="px-6 py-5 border-b border-slate-700">
+      <span class="text-xl font-bold text-sky-400">📈 Portfolio</span>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1 text-sm font-medium">
+      <a href="dashboard.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </a>
+      <a href="holdings.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        Holdings
+      </a>
+      <a href="positions.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Positions
+      </a>
+      <a href="orders.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        Orders
+      </a>
+      <a href="watchlist.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+        Watchlist
+      </a>
+    </nav>
+    <div class="px-4 py-4 border-t border-slate-700">
+      <div id="health-badge" class="flex items-center gap-2 text-xs text-slate-400">
+        <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+        Checking...
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+      <h1 class="text-lg font-semibold">Holdings</h1>
+      <div class="flex items-center gap-3">
+        <input id="search-input" type="text" placeholder="Search symbol..."
+          class="bg-slate-700 text-sm text-slate-200 placeholder-slate-500 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:border-sky-500 w-48" />
+        <select id="sort-select"
+          class="bg-slate-700 text-sm text-slate-200 border border-slate-600 rounded-lg px-3 py-2 focus:outline-none focus:border-sky-500">
+          <option value="symbol">Sort: Symbol</option>
+          <option value="pnl">Sort: P&amp;L</option>
+          <option value="pnl_percent">Sort: P&amp;L %</option>
+          <option value="current_value">Sort: Value</option>
+        </select>
+        <button onclick="loadHoldings()"
+          class="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- Summary bar -->
+    <div id="summary-bar" class="bg-slate-800 border-b border-slate-700 px-6 py-3 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm"></div>
+
+    <!-- Table -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-slate-700">
+              <th class="px-4 py-3 text-left">Symbol</th>
+              <th class="px-4 py-3 text-right">Qty</th>
+              <th class="px-4 py-3 text-right">Avg Price</th>
+              <th class="px-4 py-3 text-right">LTP</th>
+              <th class="px-4 py-3 text-right">Invested</th>
+              <th class="px-4 py-3 text-right">Current</th>
+              <th class="px-4 py-3 text-right">P&amp;L</th>
+              <th class="px-4 py-3 text-right">P&amp;L %</th>
+            </tr>
+          </thead>
+          <tbody id="holdings-body">
+            <!-- filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium opacity-0 translate-y-4 bg-slate-700 text-white"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/pages/holdings.js"></script>
+</body>
+</html>
