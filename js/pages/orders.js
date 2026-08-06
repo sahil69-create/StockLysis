@@ -52,7 +52,7 @@ function renderSummary(orders) {
     </div>
     <div>
       <p class="text-[10px] text-slate-500 uppercase tracking-wider">Complete</p>
-      <p class="font-semibold text-sky-300 text-sm mt-0.5 tabular-nums">${completed}</p>
+      <p class="font-semibold text-emerald-300 text-sm mt-0.5 tabular-nums">${completed}</p>
     </div>
     <div>
       <p class="text-[10px] text-slate-500 uppercase tracking-wider">Pending</p>
@@ -111,7 +111,7 @@ function renderTable(orders) {
             ${o.symbol.slice(0,2).toUpperCase()}
           </div>
           <div>
-            <p class="font-bold ${side === "BUY" ? "text-sky-400" : "text-rose-400"} tracking-tight">${escapeHtml(o.symbol)}</p>
+            <p class="font-bold ${side === "BUY" ? "text-emerald-400" : "text-rose-400"} tracking-tight">${escapeHtml(o.symbol)}</p>
             ${o.exchange ? `<p class="text-[10px] text-slate-500 uppercase tracking-wider">${escapeHtml(o.exchange)}</p>` : ""}
           </div>
         </div>
