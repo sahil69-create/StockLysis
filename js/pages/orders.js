@@ -107,7 +107,7 @@ function renderTable(orders) {
       <td class="px-4 py-3.5">
         <div class="flex items-center gap-2.5">
           <div class="hidden sm:flex w-9 h-9 rounded-lg items-center justify-center text-sm font-bold text-white"
-               style="background: linear-gradient(135deg, hsl(${hue} 70% 52%), hsl(${(hue+40)%360} 70% 45%)); box-shadow: 0 6px 16px -6px hsl(${hue} 70% 50% / .6);">
+               style="background: hsl(${hue} 70% 52%); box-shadow: 0 6px 16px -6px hsl(${hue} 70% 50% / .6);">
             ${o.symbol.slice(0,2).toUpperCase()}
           </div>
           <div>
