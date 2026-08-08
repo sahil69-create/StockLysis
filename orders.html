@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Orders — Portfolio</title>
+  <title>Orders — StockLysis</title>
   <meta name="description" content="View your complete order history — buy and sell orders with status, type, price, and execution details." />
   <meta name="keywords" content="orders, stock orders, buy orders, sell orders, order history, trading orders, portfolio orders" />
-  <meta name="author" content="Portfolio App" />
+  <meta name="author" content="StockLysis" />
   <meta name="robots" content="index, follow" />
 
   <!-- Favicon -->
@@ -14,139 +14,241 @@
   <link rel="shortcut icon" type="image/jpeg" href="https://files.catbox.moe/md1fro.jpg" />
   <link rel="apple-touch-icon" href="https://files.catbox.moe/md1fro.jpg" />
 
-  <!-- Google Font: Inter -->
+  <!-- Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Orders — Portfolio" />
+  <meta property="og:title" content="Orders — StockLysis" />
   <meta property="og:description" content="View your complete order history — buy and sell orders with status, type, price, and execution details." />
   <meta property="og:image" content="https://files.catbox.moe/md1fro.jpg" />
   <meta property="og:url" content="" />
-  <meta property="og:site_name" content="Portfolio" />
+  <meta property="og:site_name" content="StockLysis" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Orders — Portfolio" />
+  <meta name="twitter:title" content="Orders — StockLysis" />
   <meta name="twitter:description" content="View your complete order history — buy and sell orders with status, type, price, and execution details." />
   <meta name="twitter:image" content="https://files.catbox.moe/md1fro.jpg" />
+  <meta name="theme-color" content="#465fff" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem("stocklysis.mode") || "dark";
+        var theme = localStorage.getItem("stocklysis.theme") || "blue";
+        var html = document.documentElement;
+        if (mode === "dark") html.classList.add("dark");
+        else html.classList.remove("dark");
+        html.setAttribute("data-theme", theme);
+      } catch (e) {}
+    })();
+  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: '#10b981' }, fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] } } } }
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              25:  '#f2f7ff', 50:  '#ecf3ff', 100: '#dde9ff', 200: '#c2d6ff',
+              300: '#9cb9ff', 400: '#7592ff', 500: '#465fff', 600: '#3641f5',
+              700: '#2a31d8', 800: '#252dae', 900: '#262e89', 950: '#161950',
+            },
+            success: { 50:'#ecfdf3', 100:'#d1fadf', 500:'#12b76a', 600:'#039855' },
+            error:   { 50:'#fef3f2', 100:'#fee4e2', 500:'#f04438', 600:'#d92d20' },
+            warning: { 50:'#fffaeb', 100:'#fef0c7', 500:'#f79009', 600:'#dc6803' },
+            orange:  { 500:'#fb6514' },
+            purple:  { 500:'#7a5af8' },
+            pink:    { 500:'#ee46bc' },
+            gray:    { dark:'#1a2231', 950:'#0c111d' }
+          },
+          fontFamily: { sans: ['Outfit','Inter','ui-sans-serif','system-ui'] },
+          boxShadow: {
+            'theme-xs': '0px 1px 2px 0px rgba(16, 24, 40, 0.05)',
+            'theme-sm': '0px 1px 3px 0 rgba(16,24,40,.10), 0 1px 2px 0 rgba(16,24,40,.06)',
+            'theme-md': '0 4px 8px -2px rgba(16,24,40,.10), 0 2px 4px -2px rgba(16,24,40,.06)',
+            'theme-lg': '0 12px 16px -4px rgba(16,24,40,.08), 0 4px 6px -2px rgba(16,24,40,.03)',
+          }
+        }
+      }
+    }
   </script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex">
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-200">
 
-  <!-- Sidebar -->
-  <aside class="sidebar w-60 shrink-0 bg-slate-800 border-r border-slate-700 flex flex-col min-h-screen">
-    <div class="px-6 py-5 border-b border-slate-700">
-      <span class="text-xl font-bold text-emerald-400 flex items-center gap-2">
-        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30">📈</span>
-        Portfolio
-      </span>
-    </div>
-    <nav class="flex-1 px-3 py-4 space-y-1 text-sm font-medium">
-      <a href="dashboard.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-        Dashboard
-      </a>
-      <a href="holdings.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-        Holdings
-      </a>
-      <a href="positions.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        Positions
-      </a>
-      <a href="orders.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-        Orders
-      </a>
-      <a href="watchlist.html" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-        Watchlist
-      </a>
-    </nav>
-    <div class="px-4 py-4 border-t border-slate-700">
-      <div id="health-badge" class="flex items-center gap-2 text-xs text-slate-400">
-        <span class="w-2 h-2 rounded-full bg-slate-500"></span>
-        Checking...
+  <div class="page-wrapper flex h-screen overflow-hidden">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar fixed left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white px-5 dark:border-gray-800 dark:bg-gray-900 lg:static lg:translate-x-0 -translate-x-full lg:translate-x-0">
+      <div class="flex items-center gap-2 pt-8 sidebar-header pb-7 justify-between">
+        <a href="dashboard.html" class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/20 text-lg font-bold">📈</span>
+          <span class="logo text-xl font-bold text-gray-800 dark:text-white/90">Stock<span class="text-brand-500">Lysis</span></span>
+        </a>
       </div>
-    </div>
-  </aside>
 
-  <!-- Sidebar Overlay (Mobile) -->
-  <div class="sidebar-overlay"></div>
+      <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar flex-1">
+        <nav>
+          <div>
+            <h3 class="mb-4 text-xs uppercase leading-[20px] text-gray-400"><span class="menu-group-title">MENU</span></h3>
+            <ul class="flex flex-col gap-2 mb-6">
+              <li>
+                <a href="dashboard.html" class="nav-link group flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium menu-item-inactive">
+                  <svg class="menu-item-icon-inactive" width="24" height="24" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.5 3.25C4.25736 3.25 3.25 4.25736 3.25 5.5V8.99998C3.25 10.2426 4.25736 11.25 5.5 11.25H9C10.2426 11.25 11.25 10.2426 11.25 8.99998V5.5C11.25 4.25736 10.2426 3.25 9 3.25H5.5ZM4.75 5.5C4.75 5.08579 5.08579 4.75 5.5 4.75H9C9.41421 4.75 9.75 5.08579 9.75 5.5V8.99998C9.75 9.41419 9.41421 9.74998 9 9.74998H5.5C5.08579 9.74998 4.75 9.41419 4.75 8.99998V5.5ZM5.5 12.75C4.25736 12.75 3.25 13.7574 3.25 15V18.5C3.25 19.7426 4.25736 20.75 5.5 20.75H9C10.2426 20.75 11.25 19.7427 11.25 18.5V15C11.25 13.7574 10.2426 12.75 9 12.75H5.5ZM4.75 15C4.75 14.5858 5.08579 14.25 5.5 14.25H9C9.41421 14.25 9.75 14.5858 9.75 15V18.5C9.75 18.9142 9.41421 19.25 9 19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5V15ZM12.75 5.5C12.75 4.25736 13.7574 3.25 15 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V8.99998C20.75 10.2426 19.7426 11.25 18.5 11.25H15C13.7574 11.25 12.75 10.2426 12.75 8.99998V5.5ZM15 4.75C14.5858 4.75 14.25 5.08579 14.25 5.5V8.99998C14.25 9.41419 14.5858 9.74998 15 9.74998H18.5C18.9142 9.74998 19.25 9.41419 19.25 8.99998V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H15ZM15 12.75C13.7574 12.75 12.75 13.7574 12.75 15V18.5C12.75 19.7426 13.7574 20.75 15 20.75H18.5C19.7426 20.75 20.75 19.7427 20.75 18.5V15C20.75 13.7574 19.7426 12.75 18.5 12.75H15ZM14.25 15C14.25 14.5858 14.5858 14.25 15 14.25H18.5C18.9142 14.25 19.25 14.5858 19.25 15V18.5C19.25 18.9142 18.9142 19.25 18.5 19.25H15C14.5858 19.25 14.25 18.9142 14.25 18.5V15Z" fill=""/></svg>
+                  <span class="menu-item-text">Dashboard</span>
+                </a>
+              </li>
+              <li>
+                <a href="holdings.html" class="nav-link group flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium menu-item-inactive">
+                  <svg class="menu-item-icon-inactive" width="24" height="24" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.25 5.5C3.25 4.25736 4.25736 3.25 5.5 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V18.5C20.75 19.7426 19.7426 20.75 18.5 20.75H5.5C4.25736 20.75 3.25 19.7426 3.25 18.5V5.5ZM5.5 4.75C5.08579 4.75 4.75 5.08579 4.75 5.5V8.58325L19.25 8.58325V5.5C19.25 5.08579 18.9142 5.25 18.5 4.75H5.5ZM19.25 10.0833H15.416V13.9165H19.25V10.0833ZM13.916 10.0833L10.083 10.0833V13.9165L13.916 13.9165V10.0833ZM8.58301 10.0833H4.75V13.9165H8.58301V10.0833ZM4.75 18.5V15.4165H8.58301V19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5ZM10.083 19.25V15.4165L13.916 15.4165V19.25H10.083ZM15.416 19.25V15.4165H19.25V18.5C19.25 18.9142 18.9142 19.25 18.5 19.25H15.416Z" fill=""/></svg>
+                  <span class="menu-item-text">Holdings</span>
+                </a>
+              </li>
+              <li>
+                <a href="positions.html" class="nav-link group flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium menu-item-inactive">
+                  <svg class="menu-item-icon-inactive" width="24" height="24" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" fill=""/></svg>
+                  <span class="menu-item-text">Positions</span>
+                </a>
+              </li>
+              <li>
+                <a href="orders.html" class="nav-link group flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium menu-item-active">
+                  <svg class="menu-item-icon-active" width="24" height="24" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" fill=""/></svg>
+                  <span class="menu-item-text">Orders</span>
+                </a>
+              </li>
+              <li>
+                <a href="watchlist.html" class="nav-link group flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium menu-item-inactive">
+                  <svg class="menu-item-icon-inactive" width="24" height="24" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" fill=""/></svg>
+                  <span class="menu-item-text">Watchlist</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </div>
 
-  <!-- Main -->
-  <main class="flex-1 flex flex-col overflow-hidden">
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <button class="hamburger text-slate-300">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <div>
-          <h1 class="text-lg font-semibold tracking-tight">Orders</h1>
-          <p class="text-xs text-slate-500 mt-0.5 hidden sm:block">Order history with execution details</p>
+      <div class="px-2 py-4 border-t border-gray-200 dark:border-gray-800">
+        <div id="health-badge" class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span class="w-2 h-2 rounded-full bg-gray-400"></span>Checking...
         </div>
       </div>
-      <div class="flex items-center gap-3 flex-wrap">
-        <select id="filter-status"
-          class="bg-slate-700 text-sm text-slate-200 border border-slate-600 rounded-lg px-2 sm:px-3 py-2 focus:outline-none focus:border-emerald-500">
-          <option value="">All Status</option>
-          <option value="COMPLETE">Complete</option>
-          <option value="OPEN">Open / Pending</option>
-          <option value="CANCELLED">Cancelled</option>
-        </select>
-        <select id="filter-type"
-          class="bg-slate-700 text-sm text-slate-200 border border-slate-600 rounded-lg px-2 sm:px-3 py-2 focus:outline-none focus:border-emerald-500">
-          <option value="">All Types</option>
-          <option value="BUY">Buy</option>
-          <option value="SELL">Sell</option>
-        </select>
-        <button onclick="loadOrders()"
-          class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-3 sm:px-4 py-2 rounded-lg transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          Refresh
-        </button>
-      </div>
-    </header>
+    </aside>
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay"></div>
 
-    <!-- Summary -->
-    <div id="orders-summary" class="bg-slate-800 border-b border-slate-700 px-6 py-3 flex flex-wrap gap-4 sm:gap-6 text-sm"></div>
+    <!-- ===== Content Area ===== -->
+    <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
 
-    <!-- Table -->
-    <div class="flex-1 overflow-y-auto p-6">
-      <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-x-auto table-container">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-slate-700">
-              <th class="px-4 py-3 text-left">Order ID</th>
-              <th class="px-4 py-3 text-left">Symbol</th>
-              <th class="px-4 py-3 text-center">Type</th>
-              <th class="px-4 py-3 text-center">Side</th>
-              <th class="px-4 py-3 text-right">Qty</th>
-              <th class="px-4 py-3 text-right">Price</th>
-              <th class="px-4 py-3 text-center">Status</th>
-              <th class="px-4 py-3 text-left">Time</th>
-            </tr>
-          </thead>
-          <tbody id="orders-body"></tbody>
-        </table>
-      </div>
+      <!-- ===== Header ===== -->
+      <header class="sticky top-0 z-99999 flex w-full border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div class="flex grow flex-col items-center justify-between lg:flex-row lg:px-6 w-full">
+          <div class="flex w-full items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4 dark:border-gray-800">
+            <button class="hamburger z-99999 flex h-10 w-10 items-center justify-center rounded-lg border-gray-200 text-gray-500 lg:h-11 lg:w-11 lg:border dark:border-gray-800 dark:text-gray-400">
+              <span></span><span></span><span></span>
+            </button>
+            <div class="lg:hidden">
+              <a href="dashboard.html" class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-brand-500 text-white text-sm font-bold">📈</span>
+                <span class="font-bold text-gray-800 dark:text-white/90">Stock<span class="text-brand-500">Lysis</span></span>
+              </a>
+            </div>
+            <div class="hidden lg:block flex items-center gap-4">
+              <div>
+                <h1 class="text-lg font-semibold tracking-tight text-gray-800 dark:text-white/90">Orders</h1>
+                <p class="text-xs text-gray-500 mt-0.5">Order history with execution details</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full items-center justify-between gap-4 px-5 py-4 lg:flex lg:justify-end lg:px-0 shadow-theme-md lg:shadow-none">
+            <div class="lg:hidden mb-3">
+              <h1 class="text-lg font-semibold tracking-tight text-gray-800 dark:text-white/90">Orders</h1>
+              <p class="text-xs text-gray-500 mt-0.5">Order history with execution details</p>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="theme-controls hidden sm:flex">
+                <button id="theme-mode-toggle" class="icon-toggle" title="Toggle dark / light">
+                  <svg class="ico-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+                  <svg class="ico-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+              </div>
+              <div class="theme-swatches">
+                <button class="swatch" data-theme="blue" title="Blue"></button>
+                <button class="swatch" data-theme="red" title="Red"></button>
+                <button class="swatch" data-theme="lime" title="Lime"></button>
+                <button class="swatch" data-theme="pink" title="Pink"></button>
+              </div>
+              <select id="filter-status"
+                class="shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+                <option value="">All Status</option>
+                <option value="COMPLETE">Complete</option>
+                <option value="OPEN">Open / Pending</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+              <select id="filter-type"
+                class="shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:ring-3 focus:outline-hidden dark:border-gray-700 dark:bg-gray-800 dark:text-white/90">
+                <option value="">All Types</option>
+                <option value="BUY">Buy</option>
+                <option value="SELL">Sell</option>
+              </select>
+              <button onclick="loadOrders()"
+                class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition h-11">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+      <!-- Header End -->
+
+      <!-- Summary bar -->
+      <div id="orders-summary" class="bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-800 px-4 md:px-6 py-3 flex flex-wrap gap-4 sm:gap-6 text-sm"></div>
+
+      <!-- ===== Main Content ===== -->
+      <main>
+        <div class="p-4 mx-auto max-w-screen-2xl md:p-6">
+          <!-- Orders Table -->
+          <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="w-full overflow-x-auto table-container">
+              <table class="min-w-full w-full text-sm">
+                <thead>
+                  <tr class="border-gray-100 border-y dark:border-gray-800">
+                    <th class="py-3 px-4 text-left"><div class="flex items-center"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Order ID</p></div></th>
+                    <th class="py-3 px-4 text-left"><div class="flex items-center"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Symbol</p></div></th>
+                    <th class="py-3 px-4 text-center"><div class="flex items-center justify-center"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Type</p></div></th>
+                    <th class="py-3 px-4 text-center"><div class="flex items-center justify-center"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Side</p></div></th>
+                    <th class="py-3 px-4 text-right"><div class="flex items-center justify-end"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Qty</p></div></th>
+                    <th class="py-3 px-4 text-right"><div class="flex items-center justify-end"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Price</p></div></th>
+                    <th class="py-3 px-4 text-center"><div class="flex items-center justify-center"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Status</p></div></th>
+                    <th class="py-3 px-4 text-left"><div class="flex items-center"><p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Time</p></div></th>
+                  </tr>
+                </thead>
+                <tbody id="orders-body" class="divide-y divide-gray-100 dark:divide-gray-800">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
-  </main>
+  </div>
 
-  <div id="toast" class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium opacity-0 translate-y-4 bg-slate-700 text-white"></div>
+  <div id="toast" class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl text-sm font-medium opacity-0 translate-y-4 bg-gray-700 dark:bg-gray-800 text-white"></div>
 
   <script src="js/config.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/api.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pages/orders.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { if (typeof setActiveNav === 'function') setActiveNav(); });
+  </script>
 </body>
 </html>

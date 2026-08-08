@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="refresh" content="0; url=dashboard.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portfolio — Stock Market Dashboard</title>
+  <title>StockLysis — Stock Market Dashboard</title>
   <meta name="description" content="Track your stock portfolio in real-time. View holdings, positions, orders, and watchlist all in one place." />
   <meta name="keywords" content="portfolio, stock market, holdings, positions, orders, watchlist, trading, investment" />
-  <meta name="author" content="Portfolio App" />
+  <meta name="author" content="StockLysis" />
   <meta name="robots" content="index, follow" />
 
   <!-- Favicon -->
@@ -17,19 +17,33 @@
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Portfolio — Stock Market Dashboard" />
+  <meta property="og:title" content="StockLysis — Stock Market Dashboard" />
   <meta property="og:description" content="Track your stock portfolio in real-time. View holdings, positions, orders, and watchlist all in one place." />
   <meta property="og:image" content="https://files.catbox.moe/md1fro.jpg" />
   <meta property="og:url" content="" />
-  <meta property="og:site_name" content="Portfolio" />
+  <meta property="og:site_name" content="StockLysis" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Portfolio — Stock Market Dashboard" />
+  <meta name="twitter:title" content="StockLysis — Stock Market Dashboard" />
   <meta name="twitter:description" content="Track your stock portfolio in real-time. View holdings, positions, orders, and watchlist all in one place." />
   <meta name="twitter:image" content="https://files.catbox.moe/md1fro.jpg" />
+  <meta name="theme-color" content="#465fff" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem("stocklysis.mode") || "dark";
+        var theme = localStorage.getItem("stocklysis.theme") || "blue";
+        var html = document.documentElement;
+        if (mode === "dark") html.classList.add("dark");
+        else html.classList.remove("dark");
+        html.setAttribute("data-theme", theme);
+      } catch (e) {}
+    })();
+  </script>
 </head>
-<body>
-  <p>Redirecting to <a href="dashboard.html">Dashboard</a>…</p>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 min-h-screen flex items-center justify-center">
+  <p>Redirecting to <a href="dashboard.html" class="text-brand-500 hover:underline font-medium">Dashboard</a>…</p>
 </body>
 </html>
