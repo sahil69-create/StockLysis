@@ -1,6 +1,6 @@
 /**
  * watchlist.js
- * Premium watchlist grid with symbol tiles, sparklines & gradient accents.
+ * Premium watchlist grid with symbol tiles, sparklines & solid color accents.
  */
 
 function _seed(str) {
@@ -64,7 +64,7 @@ function renderCards(items) {
     const cls = hasChange ? pnlClass(item.change_percent) : "pnl-neutral";
     const arrow = hasChange ? pnlArrow(item.change_percent) : "";
     const hue = ((item.symbol.length * 37) + (item.symbol.charCodeAt(0) || 0) * 13) % 360;
-    const tileBg = `linear-gradient(135deg, hsl(${hue} 70% 52%), hsl(${(hue + 40) % 360} 70% 45%))`;
+    const tileBg = `hsl(${hue} 70% 52%)`;
     const tileGlow = `0 10px 24px -8px hsl(${hue} 70% 50% / .6)`;
     const sparkSeed = _seed(item.symbol + "watch");
     // Override sparkline trend to match real change direction if available
