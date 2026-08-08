@@ -113,10 +113,10 @@ function renderTable(holdings) {
     const spark = _sparkSVG(_sparkValues(20, _seed(h.symbol + "hold"), 0.15, 50), 78, 22);
 
     const weightBarColor = weight >= 25
-      ? "linear-gradient(90deg, rgba(239,68,68,0.25), rgba(239,68,68,0.85))"
+      ? "rgba(239,68,68,0.7)"
       : weight >= 12
-        ? "linear-gradient(90deg, rgba(245,158,11,0.25), rgba(245,158,11,0.8))"
-        : "linear-gradient(90deg, rgba(16,185,129,0.25), rgba(16,185,129,0.75))";
+        ? "rgba(245,158,11,0.65)"
+        : "rgba(16,185,129,0.6)";
 
     const hasRealName = h.company_name && h.company_name !== h.symbol;
     const nameCell = hasRealName
@@ -134,7 +134,7 @@ function renderTable(holdings) {
       <td class="px-4 py-3.5">
         <div class="flex items-center gap-2.5">
           <div class="hidden sm:flex w-9 h-9 rounded-lg items-center justify-center text-sm font-bold text-white"
-               style="background: linear-gradient(135deg, hsl(${((h.company_name||h.symbol).length*37)%360} 70% 50%), hsl(${((h.company_name||h.symbol).length*37+40)%360} 70% 45%)); box-shadow: 0 6px 16px -6px hsl(${((h.company_name||h.symbol).length*37)%360} 70% 50% / .6);">
+               style="background: hsl(${((h.company_name||h.symbol).length*37)%360} 70% 50%); box-shadow: 0 6px 16px -6px hsl(${((h.company_name||h.symbol).length*37)%360} 70% 50% / .6);">
             ${avatarSeed}
           </div>
           <div>
