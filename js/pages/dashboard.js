@@ -43,21 +43,14 @@ function sparklineSVG(values, width = 90, height = 28, colorClass = "") {
   const first = values[0];
   const trend = last >= first;
   const stroke = trend ? "#34d399" : "#f87171";
-  const fillStart = trend ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.22)";
-  const fillEnd = "rgba(15,23,42,0)";
+  const fill = trend ? "rgba(52,211,153,0.22)" : "rgba(248,113,113,0.18)";
 
   const areaPts = `0,${height} ${pts} ${width},${height}`;
 
   return `
     <span class="sparkline" aria-hidden="true">
       <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="spark-grad-${Math.floor(Math.random()*1e6)}" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="${fillStart}"/>
-            <stop offset="100%" stop-color="${fillEnd}"/>
-          </linearGradient>
-        </defs>
-        <polygon points="${areaPts}" fill="url(#spark-grad)" />
+        <polygon points="${areaPts}" fill="${fill}" />
         <polyline points="${pts}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </span>`;
@@ -134,7 +127,7 @@ function renderStatCards(data) {
       sub: `Invested: ${formatINR(data.invested_amount)}`,
       color: "text-emerald-400",
       icon: "💎",
-      iconBg: "linear-gradient(135deg, rgba(16,185,129,0.25), rgba(52,211,153,0.1))",
+      iconBg: "rgba(16,185,129,0.18)",
       iconGlow: "rgba(16,185,129,0.55)",
       trendOverride: data.total_pnl,
       trendText: formatPercent(data.total_pnl_percent),
@@ -146,7 +139,7 @@ function renderStatCards(data) {
       sub: formatPercent(data.total_pnl_percent),
       color: pnlClass(data.total_pnl),
       icon: "📈",
-      iconBg: "linear-gradient(135deg, rgba(245,158,11,0.25), rgba(251,191,36,0.1))",
+      iconBg: "rgba(245,158,11,0.18)",
       iconGlow: "rgba(245,158,11,0.5)",
       trendOverride: data.total_pnl,
       trendText: formatPercent(data.total_pnl_percent),
@@ -158,7 +151,7 @@ function renderStatCards(data) {
       sub: formatPercent(data.todays_pnl_percent || 0),
       color: pnlClass(data.todays_pnl || 0),
       icon: "⚡",
-      iconBg: "linear-gradient(135deg, rgba(168,85,247,0.22), rgba(192,132,252,0.1))",
+      iconBg: "rgba(168,85,247,0.16)",
       iconGlow: "rgba(168,85,247,0.5)",
       trendOverride: data.todays_pnl || 0,
       trendText: formatPercent(data.todays_pnl_percent || 0),
@@ -170,7 +163,7 @@ function renderStatCards(data) {
       sub: "Active positions",
       color: "text-amber-400",
       icon: "📦",
-      iconBg: "linear-gradient(135deg, rgba(139,92,246,0.22), rgba(168,85,247,0.1))",
+      iconBg: "rgba(139,92,246,0.16)",
       iconGlow: "rgba(139,92,246,0.45)",
       trendOverride: 0,
       trendText: "Live",
@@ -317,9 +310,7 @@ function renderPnlBars(holdings) {
   el.innerHTML = items.map((h, i) => {
     const isPos = (h.pnl || 0) >= 0;
     const pct = Math.min(100, (Math.abs(h.pnl || 0) / maxAbs) * 100);
-    const color = isPos
-      ? "linear-gradient(90deg, rgba(52,211,153,0.25), rgba(52,211,153,0.7))"
-      : "linear-gradient(90deg, rgba(248,113,113,0.25), rgba(248,113,113,0.7))";
+    const color = isPos ? "rgba(52,211,153,0.55)" : "rgba(248,113,113,0.55)";
     const barInner = isPos
       ? `<div class="h-full rounded-l-md" style="width:${pct}%; background:${color};"></div>`
       : `<div class="h-full rounded-r-md ml-auto" style="width:${pct}%; background:${color};"></div>`;
