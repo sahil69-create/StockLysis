@@ -11,19 +11,36 @@ const COLORS = [
   "#84cc16","#6366f1","#f43f5e","#06b6d4","#0ea5e9",
 ];
 
-// ── Utility: generate a deterministic pseudo-sparkline from a seed ──────────
-function generateSparkline(length, seed, volatility = 0.12, base = 50) {
-  const values = [];
-  let v = base;
-  let s = seed || 1;
-  for (let i = 0; i < length; i++) {
-    s = (s * 9301 + 49297) % 233280;
-    const rand = s / 233280;
-    const delta = (rand - 0.5) * 2 * volatility * v;
-    v = Math.max(base * 0.5, Math.min(base * 1.5, v + delta));
-    values.push(+v.toFixed(2));
+// ── Real price history cache (one fetch per symbol, shared across widgets) ──
+const _historyCache = new Map();
+function getHistory(symbol, exchange) {
+  const key = `${exchange || "NSE"}:${symbol}`;
+  if (!_historyCache.has(key)) {
+    _historyCache.set(
+      key,
+      API.getHistory(symbol, exchange || "NSE").catch(() => null)
+    );
   }
-  return values;
+  return _historyCache.get(key);
+}
+
+// Render a REAL sparkline (from actual close prices) into a placeholder element.
+// fluid=true makes the SVG scale to its container width (for the trend cards).
+async function injectSpark(elId, symbol, exchange, w = 90, h = 28, fluid = false) {
+  const el = document.getElementById(elId);
+  if (!el) return null;
+  const hist = await getHistory(symbol, exchange);
+  const vals = ((hist && hist.points) || []).map((p) => p.c).filter((v) => v != null);
+  if (vals.length >= 2) {
+    el.innerHTML = sparklineSVG(vals, w, h);
+    if (fluid) {
+      const svg = el.querySelector("svg");
+      if (svg) { svg.setAttribute("width", "100%"); svg.style.maxWidth = "100%"; }
+    }
+  } else {
+    el.innerHTML = `<span class="text-[10px] text-mode-tertiary">no chart data</span>`;
+  }
+  return hist;
 }
 
 // ── Sparkline SVG renderer ──────────────────────────────────────────────────
@@ -54,16 +71,6 @@ function sparklineSVG(values, width = 90, height = 28, colorClass = "") {
         <polyline points="${pts}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </span>`;
-}
-
-// ── Seed helper (hash string to int) ────────────────────────────────────────
-function hashSeed(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h * 16777619) >>> 0;
-  }
-  return h || 1;
 }
 
 // ── Helper: detect if we should use dark-style slate fallback ──────────────
@@ -167,11 +174,9 @@ function renderStatCards(data) {
   const el = document.getElementById("stat-cards");
 
   const buildCard = (opts) => {
-    const sparkVals = generateSparkline(24, hashSeed(opts.label + (data.generated_at || "")), 0.18, 50);
-    const trendDir = sparkVals[sparkVals.length - 1] >= sparkVals[0];
     const trendLabel = opts.trendOverride != null
       ? (opts.trendOverride > 0 ? "up" : opts.trendOverride < 0 ? "down" : "flat")
-      : (trendDir ? "up" : "down");
+      : "flat";
     const trendText = opts.trendText || (trendLabel === "flat" ? "Stable" : trendLabel === "up" ? "Up" : "Down");
 
     return `
@@ -190,7 +195,6 @@ function renderStatCards(data) {
               <p class="stat-value ${opts.color}">${opts.value}</p>
               <p class="stat-sub">${opts.sub}</p>
             </div>
-            ${sparklineSVG(sparkVals, 90, 28)}
           </div>
         </div>
       </div>`;
@@ -211,7 +215,7 @@ function renderStatCards(data) {
     }) +
     buildCard({
       delay: 90,
-      label: "Total P&L",
+      label: "Total Return",
       value: formatINR(data.total_pnl),
       sub: formatPercent(data.total_pnl_percent),
       color: pnlClass(data.total_pnl),
@@ -223,7 +227,7 @@ function renderStatCards(data) {
     }) +
     buildCard({
       delay: 140,
-      label: "Today's P&L",
+      label: "1-Day Return",
       value: formatINR(data.todays_pnl || 0),
       sub: formatPercent(data.todays_pnl_percent || 0),
       color: pnlClass(data.todays_pnl || 0),
@@ -252,8 +256,7 @@ function renderMovers(gainers, losers) {
   const gEl = document.getElementById("gainers-list");
   const lEl = document.getElementById("losers-list");
 
-  const item = (m) => {
-    const spark = sparklineSVG(generateSparkline(16, hashSeed(m.symbol + "m"), 0.15, 50), 52, 18);
+  const item = (m, sparkId) => {
     const title = m.company_name && m.company_name !== m.symbol
       ? `<span class="font-semibold ${C.primary} text-sm block truncate">${escapeHtml(m.company_name)}</span>
          <span class="text-[10px] ${C.tertiary} font-medium tracking-wide">${escapeHtml(m.symbol)}</span>`
@@ -264,7 +267,7 @@ function renderMovers(gainers, losers) {
           ${title}
           <p class="text-[10px] ${C.tertiary} mt-0.5">${formatINR(m.pnl)}</p>
         </div>
-        ${spark}
+        <span id="${sparkId}" class="sparkline"></span>
         <span class="${pnlClass(m.pnl_percent)} font-bold text-xs whitespace-nowrap mover-pct">
           ${pnlArrow(m.pnl_percent)} ${formatPercent(m.pnl_percent)}
         </span>
@@ -272,11 +275,79 @@ function renderMovers(gainers, losers) {
   };
 
   gEl.innerHTML = gainers.length
-    ? gainers.map(item).join("")
+    ? gainers.map((m, i) => item(m, `mv-g-${i}`)).join("")
     : `<li class="${C.tertiary} text-xs p-2">No gainers</li>`;
   lEl.innerHTML = losers.length
-    ? losers.map(item).join("")
+    ? losers.map((m, i) => item(m, `mv-l-${i}`)).join("")
     : `<li class="${C.tertiary} text-xs p-2">No losers</li>`;
+
+  // Draw REAL price sparklines for each mover (fetched per symbol, cached).
+  gainers.forEach((m, i) => injectSpark(`mv-g-${i}`, m.symbol, m.exchange, 52, 18));
+  losers.forEach((m, i) => injectSpark(`mv-l-${i}`, m.symbol, m.exchange, 52, 18));
+}
+
+// ── Per-stock Returns & Trend grid (1D + Total return, real price graph) ─────
+async function renderHoldingsTrend(holdings) {
+  const el = document.getElementById("holdings-trend");
+  if (!el) return;
+  if (!holdings || !holdings.length) {
+    el.innerHTML = `<p class="${C.tertiary} text-sm col-span-full text-center py-6">No stocks yet — your holdings will appear here.</p>`;
+    return;
+  }
+
+  const list = holdings.slice(0, 12); // bound the number of history calls
+
+  el.innerHTML = list.map((h, i) => {
+    const sym = escapeHtml(h.symbol);
+    const name = h.company_name && h.company_name !== h.symbol ? escapeHtml(h.company_name) : sym;
+    const totalPct = h.pnl_percent;
+    return `
+      <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-white/[0.02] fade-up" style="animation-delay:${i * 40}ms">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="font-semibold ${C.primary} text-sm truncate">${name}</div>
+            <div class="text-[10px] ${C.tertiary} tracking-wide">${sym}${h.exchange ? " · " + escapeHtml(h.exchange) : ""}</div>
+          </div>
+          <span id="trend-badge-${i}" class="trend-chip trend-flat">…</span>
+        </div>
+        <div id="trend-spark-${i}" class="mt-3 h-9 flex items-center">
+          <span class="skeleton h-7 w-full rounded"></span>
+        </div>
+        <div class="mt-3 grid grid-cols-2 gap-2 text-center">
+          <div class="rounded-lg bg-gray-50 dark:bg-white/[0.03] py-1.5">
+            <div class="text-[10px] ${C.tertiary} uppercase tracking-wide">1-Day</div>
+            <div id="trend-1d-${i}" class="text-sm font-semibold ${C.secondary}">…</div>
+          </div>
+          <div class="rounded-lg bg-gray-50 dark:bg-white/[0.03] py-1.5">
+            <div class="text-[10px] ${C.tertiary} uppercase tracking-wide">Total</div>
+            <div class="text-sm font-semibold ${pnlClass(totalPct)}">${totalPct != null ? `${pnlArrow(totalPct)} ${formatPercent(totalPct)}` : "—"}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  await Promise.all(list.map(async (h, i) => {
+    const hist = await injectSpark(`trend-spark-${i}`, h.symbol, h.exchange, 220, 36, true);
+
+    // 1-Day return: prefer the holding's own day change, else derive from history.
+    let oneDay = (h.day_change_percent != null)
+      ? h.day_change_percent
+      : (hist && hist.change_percent != null ? hist.change_percent : null);
+    const dir = hist && hist.direction
+      ? hist.direction
+      : (oneDay == null ? "flat" : oneDay > 0 ? "up" : oneDay < 0 ? "down" : "flat");
+
+    const oneDayEl = document.getElementById(`trend-1d-${i}`);
+    if (oneDayEl) {
+      oneDayEl.className = `text-sm font-semibold ${pnlClass(oneDay)}`;
+      oneDayEl.textContent = oneDay != null ? `${pnlArrow(oneDay)} ${formatPercent(oneDay)}` : "—";
+    }
+    const badge = document.getElementById(`trend-badge-${i}`);
+    if (badge) {
+      badge.className = `trend-chip trend-${dir}`;
+      badge.textContent = dir === "up" ? "▲ Up" : dir === "down" ? "▼ Down" : "Flat";
+    }
+  }));
 }
 
 // ── SVG Donut chart ──────────────────────────────────────────────────────────
@@ -547,7 +618,6 @@ async function renderHoldingsPreview() {
         </thead>
         <tbody>
           ${top5.map((h, i) => {
-            const spark = sparklineSVG(generateSparkline(20, hashSeed(h.symbol + "h"), 0.14, 50), 80, 22);
             const hasRealName = h.company_name && h.company_name !== h.symbol;
             const avatarSeed = (h.company_name || h.symbol || "").slice(0, 2).toUpperCase();
             const nameCell = hasRealName
@@ -603,7 +673,7 @@ async function renderHoldingsPreview() {
                 <td class="px-4 py-3 right num">${formatNumber(h.quantity, 0)}</td>
                 <td class="px-4 py-3 right">${priceCell}</td>
                 <td class="px-4 py-3 right">${valueCell}</td>
-                <td class="px-4 py-3 right hidden md:table-cell">${spark}</td>
+                <td class="px-4 py-3 right hidden md:table-cell"><span id="prev-spark-${i}" class="sparkline"></span></td>
                 <td class="px-4 py-3 right num ${pnlClass(h.pnl)}">
                   <div>
                     <div>${h.pnl != null ? formatINR(h.pnl) : "—"}</div>
@@ -614,6 +684,9 @@ async function renderHoldingsPreview() {
           }).join("")}
         </tbody>
       </table>`;
+
+    // Draw REAL price sparklines in the Trend column (fetched per symbol, cached).
+    top5.forEach((h, i) => injectSpark(`prev-spark-${i}`, h.symbol, h.exchange, 80, 22));
   } catch (err) {
     showError(el, err.message);
   }
@@ -621,8 +694,13 @@ async function renderHoldingsPreview() {
 
 // ── Main loader ──────────────────────────────────────────────────────────────
 async function loadDashboard() {
+  // Fresh prices on every (re)load — drop any cached history.
+  _historyCache.clear();
+
   // Skeletons
   document.getElementById("stat-cards").innerHTML = skeletonCards(4);
+  document.getElementById("holdings-trend").innerHTML = Array.from({length: 4}, () => `
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4 h-40 skeleton"></div>`).join("");
   document.getElementById("gainers-list").innerHTML = `<li class="skeleton h-10 w-full rounded"></li>`.repeat(3);
   document.getElementById("losers-list").innerHTML  = `<li class="skeleton h-10 w-full rounded"></li>`.repeat(3);
   document.getElementById("donut-chart").innerHTML = `<div class="w-full aspect-square max-w-[260px] mx-auto skeleton rounded-full"></div>`;
@@ -650,6 +728,7 @@ async function loadDashboard() {
 
     renderPnlBars(holdings);
     renderAnalysis(holdings, data);
+    renderHoldingsTrend(holdings);
 
     document.getElementById("last-updated").textContent =
       "Updated " + new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" });

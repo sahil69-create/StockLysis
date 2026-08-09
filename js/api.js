@@ -65,5 +65,13 @@ const API = (() => {
     /** GET /market-price/:symbol?exchange=NSE */
     getMarketPrice: (symbol, exchange = "NSE") =>
       _get(`/market-price/${encodeURIComponent(symbol)}?exchange=${exchange}`),
+
+    /** GET /history/:symbol?exchange=NSE&interval=15&days=7 — real price series */
+    getHistory: (symbol, exchange = "NSE", interval = 15, days = 7) =>
+      _get(
+        `/history/${encodeURIComponent(symbol)}?exchange=${encodeURIComponent(
+          exchange
+        )}&interval=${interval}&days=${days}`
+      ),
   };
 })();

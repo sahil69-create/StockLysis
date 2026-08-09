@@ -268,9 +268,26 @@
       <main>
         <div class="p-4 mx-auto max-w-screen-2xl md:p-6 space-y-4 md:space-y-6">
 
-          <!-- Stat Cards with mini sparklines -->
+          <!-- Connection status banner (shown only when Groww isn't connected) -->
+          <div id="connection-status" class="hidden"></div>
+
+          <!-- Stat Cards: Portfolio Value · Total Return · 1-Day Return · Holdings -->
           <div id="stat-cards" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 md:gap-6">
             <!-- filled by JS -->
+          </div>
+
+          <!-- Per-stock returns + real price trend graphs -->
+          <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Your Stocks · Returns &amp; Trend</h2>
+                <p class="text-xs text-gray-500 mt-0.5">1-day &amp; total return with live price movement for each stock you own</p>
+              </div>
+              <span class="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400">Live</span>
+            </div>
+            <div id="holdings-trend" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-5">
+              <!-- per-stock trend cards rendered by JS -->
+            </div>
           </div>
 
           <!-- Middle row: Allocation Donut + P&L Bars + Movers -->
