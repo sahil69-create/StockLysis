@@ -66,6 +66,18 @@ function hashSeed(str) {
   return h || 1;
 }
 
+// ── Helper: detect if we should use dark-style slate fallback ──────────────
+function _isDark() {
+  return document.documentElement.classList.contains("dark");
+}
+
+// ── Mode-aware text color helpers (no hardcoded slate) ──────────────────────
+const C = {
+  primary:   "text-mode-primary",
+  secondary: "text-mode-secondary",
+  tertiary:  "text-mode-tertiary",
+};
+
 // ── Health check ─────────────────────────────────────────────────────────────
 async function checkHealth() {
   const badge = document.getElementById("health-badge");
@@ -73,13 +85,19 @@ async function checkHealth() {
     const data = await API.getHealth();
     const ok = data.status === "ok";
     badge.innerHTML = `
-      <span class="w-2 h-2 rounded-full ${ok ? "bg-green-400" : "bg-yellow-400"}" style="color: ${ok ? "#4ade80" : "#fbbf24"}"></span>
-      <span>${ok ? "Backend OK" : "Degraded"}</span>`;
+      <span class="health ${ok ? "" : "err"}" style="display:inline-flex;align-items:center;gap:.35rem;">
+        <span class="health-dot${ok ? "" : " err"}"></span>
+        <span class="${C.secondary}">${ok ? "Backend OK" : "Degraded"}</span>
+      </span>`;
     if (!ok && data.issues?.length) {
       showToast("Backend issues: " + data.issues.join(", "), "error", 6000);
     }
   } catch (err) {
-    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500" style="color:#f87171"></span><span>Offline</span>`;
+    badge.innerHTML = `
+      <span class="health" style="display:inline-flex;align-items:center;gap:.35rem;">
+        <span class="health-dot err"></span>
+        <span class="${C.tertiary}">Offline</span>
+      </span>`;
     showToast("Cannot reach backend — is it running?", "error");
   }
 }
@@ -97,21 +115,20 @@ function renderStatCards(data) {
     const trendText = opts.trendText || (trendLabel === "flat" ? "Stable" : trendLabel === "up" ? "Up" : "Down");
 
     return `
-      <div class="relative rounded-xl p-5 fade-up overflow-hidden" style="animation-delay: ${opts.delay}ms">
+      <div class="stat-card fade-up overflow-hidden" style="animation-delay: ${opts.delay}ms">
         <div class="stat-ring"></div>
         <div class="relative z-10">
           <div class="flex items-start justify-between mb-3">
-            <div class="inline-flex items-center justify-center w-10 h-10 rounded-xl"
-                 style="background: ${opts.iconBg}; box-shadow: 0 8px 20px -8px ${opts.iconGlow};">
-              <span class="text-lg">${opts.icon}</span>
+            <div class="stat-icon" style="background: ${opts.iconBg}; box-shadow: 0 8px 20px -8px ${opts.iconGlow}; color:#fff;">
+              <span>${opts.icon}</span>
             </div>
             <span class="trend-chip trend-${trendLabel}">${trendText}</span>
           </div>
-          <p class="text-xs text-slate-500 uppercase tracking-[0.14em] mb-1">${opts.label}</p>
+          <p class="stat-label">${opts.label}</p>
           <div class="flex items-end justify-between gap-3">
             <div>
-              <p class="text-2xl font-extrabold ${opts.color} tracking-tight leading-none">${opts.value}</p>
-              <p class="text-xs text-slate-400 mt-1.5">${opts.sub}</p>
+              <p class="stat-value ${opts.color}">${opts.value}</p>
+              <p class="stat-sub">${opts.sub}</p>
             </div>
             ${sparklineSVG(sparkVals, 90, 28)}
           </div>
@@ -123,12 +140,12 @@ function renderStatCards(data) {
     buildCard({
       delay: 40,
       label: "Portfolio Value",
-      value: formatINR(data.current_portfolio_value),
-      sub: `Invested: ${formatINR(data.invested_amount)}`,
-      color: "text-emerald-400",
+      value: `<span class="live-dot" style="vertical-align:middle;"></span>${formatINR(data.current_portfolio_value)}`,
+      sub: `<span class="data-invested-label">Invested</span> ${formatINR(data.invested_amount)}`,
+      color: C.primary,
       icon: "💎",
-      iconBg: "rgba(16,185,129,0.18)",
-      iconGlow: "rgba(16,185,129,0.55)",
+      iconBg: "var(--brand-500)",
+      iconGlow: "color-mix(in srgb, var(--brand-500) 55%, transparent)",
       trendOverride: data.total_pnl,
       trendText: formatPercent(data.total_pnl_percent),
     }) +
@@ -139,8 +156,8 @@ function renderStatCards(data) {
       sub: formatPercent(data.total_pnl_percent),
       color: pnlClass(data.total_pnl),
       icon: "📈",
-      iconBg: "rgba(245,158,11,0.18)",
-      iconGlow: "rgba(245,158,11,0.5)",
+      iconBg: "var(--success-500)",
+      iconGlow: "rgba(18,183,106,0.5)",
       trendOverride: data.total_pnl,
       trendText: formatPercent(data.total_pnl_percent),
     }) +
@@ -151,8 +168,8 @@ function renderStatCards(data) {
       sub: formatPercent(data.todays_pnl_percent || 0),
       color: pnlClass(data.todays_pnl || 0),
       icon: "⚡",
-      iconBg: "rgba(168,85,247,0.16)",
-      iconGlow: "rgba(168,85,247,0.5)",
+      iconBg: "var(--warning-500)",
+      iconGlow: "rgba(247,144,9,0.5)",
       trendOverride: data.todays_pnl || 0,
       trendText: formatPercent(data.todays_pnl_percent || 0),
     }) +
@@ -161,10 +178,10 @@ function renderStatCards(data) {
       label: "Holdings",
       value: data.holdings_count ?? "—",
       sub: "Active positions",
-      color: "text-amber-400",
+      color: C.primary,
       icon: "📦",
-      iconBg: "rgba(139,92,246,0.16)",
-      iconGlow: "rgba(139,92,246,0.45)",
+      iconBg: "var(--purple-500)",
+      iconGlow: "rgba(122,90,248,0.45)",
       trendOverride: 0,
       trendText: "Live",
     });
@@ -178,17 +195,17 @@ function renderMovers(gainers, losers) {
   const item = (m) => {
     const spark = sparklineSVG(generateSparkline(16, hashSeed(m.symbol + "m"), 0.15, 50), 52, 18);
     const title = m.company_name && m.company_name !== m.symbol
-      ? `<span class="font-semibold text-slate-200 text-sm block truncate">${escapeHtml(m.company_name)}</span>
-         <span class="text-[10px] text-slate-500 font-medium tracking-wide">${escapeHtml(m.symbol)}</span>`
-      : `<span class="font-semibold text-slate-200 text-sm block truncate">${escapeHtml(m.symbol)}</span>`;
+      ? `<span class="font-semibold ${C.primary} text-sm block truncate">${escapeHtml(m.company_name)}</span>
+         <span class="text-[10px] ${C.tertiary} font-medium tracking-wide">${escapeHtml(m.symbol)}</span>`
+      : `<span class="font-semibold ${C.primary} text-sm block truncate">${escapeHtml(m.symbol)}</span>`;
     return `
-      <li class="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-white/5 transition fade-up">
+      <li class="mover-item fade-up">
         <div class="min-w-0 flex-1">
           ${title}
-          <p class="text-[10px] text-slate-500 mt-0.5">${formatINR(m.pnl)}</p>
+          <p class="text-[10px] ${C.tertiary} mt-0.5">${formatINR(m.pnl)}</p>
         </div>
         ${spark}
-        <span class="${pnlClass(m.pnl_percent)} font-bold text-xs whitespace-nowrap">
+        <span class="${pnlClass(m.pnl_percent)} font-bold text-xs whitespace-nowrap mover-pct">
           ${pnlArrow(m.pnl_percent)} ${formatPercent(m.pnl_percent)}
         </span>
       </li>`;
@@ -196,10 +213,10 @@ function renderMovers(gainers, losers) {
 
   gEl.innerHTML = gainers.length
     ? gainers.map(item).join("")
-    : `<li class="text-slate-500 text-xs p-2">No gainers</li>`;
+    : `<li class="${C.tertiary} text-xs p-2">No gainers</li>`;
   lEl.innerHTML = losers.length
     ? losers.map(item).join("")
-    : `<li class="text-slate-500 text-xs p-2">No losers</li>`;
+    : `<li class="${C.tertiary} text-xs p-2">No losers</li>`;
 }
 
 // ── SVG Donut chart ──────────────────────────────────────────────────────────
@@ -257,33 +274,35 @@ function renderDonut(slices, totalValue) {
     : `<tspan x="0" y="-2">${(slices[0]?.value != null ? formatINR(slices[0].value).replace("₹","₹ ") : "—")}</tspan>`;
 
   container.innerHTML = `
-    <svg viewBox="0 0 ${size} ${size}" width="100%" height="100%" class="drop-shadow-[0_0_25px_rgba(16,185,129,0.18)]">
+    <svg viewBox="0 0 ${size} ${size}" width="100%" height="100%">
       <defs>
         ${segments.map((s, i) => `
           <filter id="donut-glow-${i}" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feGaussianBlur stdDeviation="2" result="b"/>
             <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>`).join("")}
       </defs>
-      <circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="rgba(148,163,184,0.06)" stroke-width="${R-r}"/>
+      <circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="var(--border)" stroke-width="${R-r}" opacity="0.5"/>
       ${segments.map((s, i) => `
-        <path d="${s.path}" fill="${s.color}" class="donut-segment"
+        <path d="${s.path}" fill="${s.color}" class="donut-seg"
               style="color:${s.color}; filter: url(#donut-glow-${i}); animation: fadeUp .5s ease ${i*60}ms both;"
               data-label="${escapeHtml(s.label)}" data-value="${formatINR(s.value)}" data-percent="${s.percent.toFixed(1)}">
           <title>${escapeHtml(s.label)} — ${formatINR(s.value)} (${s.percent.toFixed(1)}%)</title>
         </path>`).join("")}
       <g class="donut-center" text-anchor="middle" dominant-baseline="middle" transform="translate(${cx},${cy})">
-        <text font-size="14" fill="#64748b" y="-22">Portfolio</text>
-        <text font-size="20" font-weight="800" y="2" fill="#50ba32">${centerValue}</text>
-        <text font-size="11" y="20" fill="#64748b">${slices.length} stocks</text>
+        <text class="donut-center-label" y="-22">Portfolio</text>
+        <text class="donut-center-value" y="2">${centerValue}</text>
+        <text class="donut-center-sub" y="20">${slices.length} stocks</text>
       </g>
     </svg>`;
 
   legend.innerHTML = slices.map((s, i) => `
-    <div class="flex items-center gap-2.5 p-1.5 rounded-md hover:bg-white/5 transition">
-      <span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${s.color}; box-shadow:0 0 8px ${s.color}55"></span>
-      <span class="text-slate-300 font-medium min-w-0 truncate">${escapeHtml(s.label)}</span>
-      <span class="ml-auto text-slate-400 tabular-nums">${s.percent.toFixed(1)}%</span>
+    <div class="legend-row">
+      <span class="legend-swatch" style="background:${s.color}"></span>
+      <span class="legend-name">${escapeHtml(s.label)}</span>
+      <span class="legend-meta">
+        <span class="legend-pct">${s.percent.toFixed(1)}%</span>
+      </span>
     </div>`).join("");
 }
 
@@ -291,7 +310,7 @@ function renderDonut(slices, totalValue) {
 function renderPnlBars(holdings) {
   const el = document.getElementById("pnl-bars");
   if (!holdings?.length) {
-    el.innerHTML = `<p class="text-slate-500 text-xs py-4 text-center">No holdings data</p>`;
+    el.innerHTML = `<p class="${C.tertiary} text-xs py-4 text-center">No holdings data</p>`;
     return;
   }
 
@@ -301,7 +320,7 @@ function renderPnlBars(holdings) {
     .slice(0, 8);
 
   if (!items.length) {
-    el.innerHTML = `<p class="text-slate-500 text-xs py-4 text-center">No P&amp;L data</p>`;
+    el.innerHTML = `<p class="${C.tertiary} text-xs py-4 text-center">No P&amp;L data</p>`;
     return;
   }
 
@@ -310,27 +329,32 @@ function renderPnlBars(holdings) {
   el.innerHTML = items.map((h, i) => {
     const isPos = (h.pnl || 0) >= 0;
     const pct = Math.min(100, (Math.abs(h.pnl || 0) / maxAbs) * 100);
-    const color = isPos ? "rgba(52,211,153,0.55)" : "rgba(248,113,113,0.55)";
+    const barColor = isPos ? "var(--success-500)" : "var(--error-500)";
     const barInner = isPos
-      ? `<div class="h-full rounded-l-md" style="width:${pct}%; background:${color};"></div>`
-      : `<div class="h-full rounded-r-md ml-auto" style="width:${pct}%; background:${color};"></div>`;
+      ? `<div class="pnl-row-bar up" style="width:${pct}%;"></div>`
+      : `<div class="pnl-row-bar down" style="width:${pct}%; margin-left:auto;"></div>`;
 
     const hasRealName = h.company_name && h.company_name !== h.symbol;
     const labelHtml = hasRealName
-      ? `<span class="font-semibold text-slate-200 truncate block">${escapeHtml(h.company_name)}</span>
-         <span class="text-[10px] text-slate-500 font-medium tracking-wide">${escapeHtml(h.symbol)}</span>`
-      : `<span class="font-semibold text-slate-200 truncate block">${escapeHtml(h.symbol)}</span>`;
+      ? `<span class="pnl-row-name">${escapeHtml(h.company_name)}</span>
+         <span class="text-[10px] ${C.tertiary} font-medium tracking-wide">${escapeHtml(h.symbol)}</span>`
+      : `<span class="pnl-row-name">${escapeHtml(h.symbol)}</span>`;
 
     return `
-      <div class="fade-up" style="animation-delay: ${i*50}ms">
-        <div class="flex items-start justify-between text-xs mb-1.5 gap-2">
-          <div class="min-w-0 flex-1 leading-tight">${labelHtml}</div>
-          <span class="font-bold ${pnlClass(h.pnl)} tabular-nums shrink-0">${formatINR(h.pnl)}</span>
+      <div class="pnl-row fade-up" style="animation-delay: ${i*50}ms">
+        <div class="flex flex-col gap-1 leading-tight min-w-0" style="grid-column:1;">
+          ${labelHtml}
         </div>
-        <div class="h-2.5 rounded-full bg-slate-700/50 overflow-hidden">
+        <div class="pnl-row-track" style="grid-column:2;">
           ${barInner}
         </div>
-      </div>`;
+        <div class="pnl-row-val ${isPos ? 'up' : 'down'}" style="grid-column:3;">
+          ${formatINR(h.pnl)}
+        </div>
+      </div>
+      <style>
+        .pnl-row-bar { background: ${barColor}; opacity: .7; }
+      </style>`;
   }).join("");
 }
 
@@ -350,7 +374,6 @@ function renderAnalysis(holdings, data) {
 
   const totalInvested = holdings.reduce((s, h) => s + (h.invested_value || 0), 0);
   const N = holdings.length;
-  // Herfindahl-style diversification score (higher = more concentrated / less diverse)
   const hhi = holdings.reduce((s, h) => {
     const w = totalInvested ? ((h.invested_value || 0) / totalInvested) : (1 / Math.max(N, 1));
     return s + w * w;
@@ -364,21 +387,17 @@ function renderAnalysis(holdings, data) {
                             { label: "Concentrated", cls: "trend-down", text: "High single-stock risk" };
 
   const cardHTML = (opts) => `
-    <div class="relative rounded-xl p-5 overflow-hidden fade-up">
-      <div class="absolute -right-10 -top-10 w-36 h-36 rounded-full blur-3xl opacity-30" style="background:${opts.bgGlow}"></div>
-      <div class="relative z-10">
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">${opts.eyebrow}</span>
-          <span class="trend-chip ${opts.chipCls}">${opts.chipLabel}</span>
-        </div>
-        <div class="flex items-center gap-3 mb-3">
-          <div class="text-3xl leading-none">${opts.emoji}</div>
-          <div>
-            <p class="font-extrabold text-lg ${opts.valueCls} leading-tight">${opts.title}</p>
-            ${opts.subtitle ? `<p class="text-xs text-slate-400 mt-0.5">${opts.subtitle}</p>` : ""}
-          </div>
-        </div>
-        <p class="text-xs text-slate-400 leading-relaxed">${opts.note}</p>
+    <div class="analysis-card fade-up">
+      <div class="analysis-icon ${opts.iconType}" style="background:${opts.iconBg};">
+        <span>${opts.emoji}</span>
+      </div>
+      <div class="analysis-body">
+        <h4>${opts.eyebrow}
+          <span class="trend-chip ${opts.chipCls}" style="margin-left:.5rem;">${opts.chipLabel}</span>
+        </h4>
+        <span class="big ${C.primary}">${opts.title}</span>
+        ${opts.subtitle ? `<p class="${C.secondary}">${opts.subtitle}</p>` : ""}
+        <p style="margin-top:.4rem;">${opts.note}</p>
       </div>
     </div>`;
 
@@ -410,10 +429,10 @@ function renderAnalysis(holdings, data) {
       chipCls: best.pnl_percent >= 0 ? "trend-up" : "trend-down",
       chipLabel: formatPercent(best.pnl_percent || 0),
       emoji: "🏆",
+      iconType: "score",
+      iconBg: "var(--success-500)",
       title: bestTitle,
       subtitle: bestSub,
-      valueCls: "text-emerald-300",
-      bgGlow: "rgba(16,185,129,0.35)",
       note: best.pnl_percent > 0
         ? "Strong contributor — you may consider trimming a portion to lock gains if it becomes overweight."
         : "Even your best holding is underwater — review thesis before adding more.",
@@ -423,10 +442,10 @@ function renderAnalysis(holdings, data) {
       chipCls: worst.pnl_percent < 0 ? "trend-down" : "trend-flat",
       chipLabel: formatPercent(worst.pnl_percent || 0),
       emoji: "⚠️",
+      iconType: "quality",
+      iconBg: "var(--error-500)",
       title: worstTitle,
       subtitle: worstSub,
-      valueCls: "text-rose-300",
-      bgGlow: "rgba(239,68,68,0.3)",
       note: "Largest drag on returns. Revisit the investment thesis and check for sector/company-specific news.",
     }) : "") +
     cardHTML({
@@ -434,10 +453,10 @@ function renderAnalysis(holdings, data) {
       chipCls: diversityRating.cls,
       chipLabel: `${diversityScore}/100 · ${diversityRating.label}`,
       emoji: "🎯",
+      iconType: "holdings",
+      iconBg: "var(--warning-500)",
       title: `${N} stocks`,
       subtitle: diversityRating.text,
-      valueCls: "text-amber-300",
-      bgGlow: "rgba(245,158,11,0.35)",
       note: totalInvested > 0
         ? `Top holding: ${topHoldingLabel} · ${topHoldingWeight}`
         : "Add holdings to measure portfolio concentration.",
@@ -455,41 +474,81 @@ async function renderHoldingsPreview() {
     if (!top5.length) { showEmpty(el, "No holdings"); return; }
 
     el.innerHTML = `
-      <table class="w-full text-sm">
+      <table class="data-table w-full text-sm">
         <thead>
-          <tr class="text-xs text-slate-500 uppercase tracking-wider border-b border-slate-700/70">
-            <th class="px-4 py-3 text-left">Symbol</th>
+          <tr>
+            <th class="px-4 py-3 text-left">Stock</th>
             <th class="px-4 py-3 text-right">Qty</th>
-            <th class="px-4 py-3 text-right">LTP</th>
-            <th class="px-4 py-3 text-right">Current Value</th>
-            <th class="px-4 py-3 text-right">P&L</th>
+            <th class="px-4 py-3 text-right">Avg / LTP</th>
+            <th class="px-4 py-3 text-right">Invested / Live</th>
             <th class="px-4 py-3 text-right hidden md:table-cell">Trend</th>
-            <th class="px-4 py-3 text-right">P&L %</th>
+            <th class="px-4 py-3 text-right">P&L</th>
           </tr>
         </thead>
         <tbody>
           ${top5.map((h, i) => {
             const spark = sparklineSVG(generateSparkline(20, hashSeed(h.symbol + "h"), 0.14, 50), 80, 22);
             const hasRealName = h.company_name && h.company_name !== h.symbol;
+            const avatarSeed = (h.company_name || h.symbol || "").slice(0, 2).toUpperCase();
             const nameCell = hasRealName
-              ? `<p class="font-bold text-emerald-400 truncate">${escapeHtml(h.company_name)}</p>
-                 <p class="text-[10px] text-slate-500 font-medium tracking-wide mt-0.5">
-                   ${escapeHtml(h.symbol)}${h.exchange ? ` · ${escapeHtml(h.exchange)}` : ""}
-                 </p>`
-              : `<p class="font-bold text-emerald-400">${escapeHtml(h.symbol)}</p>
-                 ${h.exchange ? `<p class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(h.exchange)}</p>` : ""}`;
+              ? `<div class="stock-cell">
+                  <div class="stock-avatar" style="background: hsl(${((h.company_name||h.symbol).length*37)%360} 65% 50%);">${avatarSeed}</div>
+                  <div class="stock-meta">
+                    <span class="stock-name">${escapeHtml(h.company_name)}</span>
+                    <span class="stock-sym">${escapeHtml(h.symbol)}${h.exchange ? ` · ${escapeHtml(h.exchange)}` : ""}</span>
+                  </div>
+                </div>`
+              : `<div class="stock-cell">
+                  <div class="stock-avatar" style="background: hsl(${(h.symbol.length*37)%360} 65% 50%);">${avatarSeed}</div>
+                  <div class="stock-meta">
+                    <span class="stock-name">${escapeHtml(h.symbol)}</span>
+                    ${h.exchange ? `<span class="stock-sym">${escapeHtml(h.exchange)}</span>` : ""}
+                  </div>
+                </div>`;
+
+            const hasLiveLtp = h.last_traded_price != null && h.last_traded_price > 0 && Math.abs(h.last_traded_price - h.average_price) > 0.001;
+            const ltpStatus = hasLiveLtp ? "" : (h.last_traded_price != null ? "stale" : "off");
+
+            const priceCell = `
+              <div class="dual-data">
+                <div class="dd-row">
+                  <span class="dd-label" style="color:var(--text-muted);">AVG</span>
+                  <span class="dd-val inv">${formatINR(h.average_price)}</span>
+                </div>
+                <div class="dd-row">
+                  <span class="dd-label" style="color:var(--brand-600);">
+                    <span class="live-dot ${ltpStatus}" style="width:5px;height:5px;"></span>LIVE
+                  </span>
+                  <span class="dd-val live">${hasLiveLtp ? formatINR(h.last_traded_price) : formatINR(h.average_price)}</span>
+                </div>
+              </div>`;
+
+            const valueCell = `
+              <div class="dual-data">
+                <div class="dd-row">
+                  <span class="dd-label" style="color:var(--text-muted);">INV</span>
+                  <span class="dd-val inv">${formatINR(h.invested_value)}</span>
+                </div>
+                <div class="dd-row">
+                  <span class="dd-label" style="color:var(--brand-600);">CUR</span>
+                  <span class="dd-val live">${h.current_value != null ? formatINR(h.current_value) : formatINR(h.invested_value)}</span>
+                </div>
+              </div>`;
+
             return `
-              <tr class="border-b border-slate-700/40 table-row-hover fade-up" style="animation-delay:${i*55}ms">
+              <tr class="table-row-hover fade-up" style="animation-delay:${i*55}ms">
                 <td class="px-4 py-3">
                   ${nameCell}
                 </td>
-                <td class="px-4 py-3 text-right text-slate-300 tabular-nums">${formatNumber(h.quantity, 0)}</td>
-                <td class="px-4 py-3 text-right text-slate-300 tabular-nums">${h.last_traded_price != null ? formatINR(h.last_traded_price) : "—"}</td>
-                <td class="px-4 py-3 text-right text-slate-300 tabular-nums font-medium">${h.current_value != null ? formatINR(h.current_value) : "—"}</td>
-                <td class="px-4 py-3 text-right ${pnlClass(h.pnl)} font-semibold tabular-nums">${h.pnl != null ? formatINR(h.pnl) : "—"}</td>
-                <td class="px-4 py-3 text-right hidden md:table-cell">${spark}</td>
-                <td class="px-4 py-3 text-right ${pnlClass(h.pnl_percent)} font-bold tabular-nums">
-                  ${h.pnl_percent != null ? `${pnlArrow(h.pnl_percent)} ${formatPercent(h.pnl_percent)}` : "—"}
+                <td class="px-4 py-3 right num">${formatNumber(h.quantity, 0)}</td>
+                <td class="px-4 py-3 right">${priceCell}</td>
+                <td class="px-4 py-3 right">${valueCell}</td>
+                <td class="px-4 py-3 right hidden md:table-cell">${spark}</td>
+                <td class="px-4 py-3 right num ${pnlClass(h.pnl)}">
+                  <div>
+                    <div>${h.pnl != null ? formatINR(h.pnl) : "—"}</div>
+                    <div class="text-[11px]">${h.pnl_percent != null ? `${pnlArrow(h.pnl_percent)} ${formatPercent(h.pnl_percent)}` : "—"}</div>
+                  </div>
                 </td>
               </tr>`;
           }).join("")}

@@ -3,6 +3,15 @@
  * Premium watchlist grid with symbol tiles, sparklines & solid color accents.
  */
 
+function _isDark() {
+  return document.documentElement.classList.contains("dark");
+}
+const C = {
+  primary:   "text-mode-primary",
+  secondary: "text-mode-secondary",
+  tertiary:  "text-mode-tertiary",
+};
+
 function _seed(str) {
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = (h * 16777619) >>> 0; }
@@ -28,8 +37,10 @@ function _sparkSVG(values, w = 120, h = 32) {
     return `${x},${y}`;
   }).join(" ");
   const up = values[values.length - 1] >= values[0];
-  const stroke = up ? "#34d399" : "#f87171";
-  const fillA = up ? "rgba(52,211,153,0.28)" : "rgba(248,113,113,0.22)";
+  const stroke = up ? "var(--success-500)" : "var(--error-500)";
+  const fillA = up
+    ? "color-mix(in srgb, var(--success-500) 28%, transparent)"
+    : "color-mix(in srgb, var(--error-500)   22%, transparent)";
   return `<span class="sparkline"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
     <polygon points="0,${h} ${pts} ${w},${h}" fill="${fillA}"/>
     <polyline points="${pts}" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -43,10 +54,16 @@ async function checkHealth() {
     const data = await API.getHealth();
     const ok = data.status === "ok";
     badge.innerHTML = `
-      <span class="w-2 h-2 rounded-full ${ok ? "bg-green-400" : "bg-yellow-400"}" style="color: ${ok ? "#4ade80" : "#fbbf24"}"></span>
-      <span>${ok ? "Backend OK" : "Degraded"}</span>`;
+      <span style="display:inline-flex;align-items:center;gap:.35rem;">
+        <span class="health-dot${ok ? "" : " err"}"></span>
+        <span class="${C.secondary}">${ok ? "Backend OK" : "Degraded"}</span>
+      </span>`;
   } catch {
-    badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500" style="color:#f87171"></span><span>Offline</span>`;
+    badge.innerHTML = `
+      <span style="display:inline-flex;align-items:center;gap:.35rem;">
+        <span class="health-dot err"></span>
+        <span class="${C.tertiary}">Offline</span>
+      </span>`;
   }
 }
 
@@ -55,7 +72,15 @@ function renderCards(items) {
   const grid = document.getElementById("watchlist-grid");
 
   if (!items.length) {
-    showEmpty(grid, "No symbols in watchlist. Add NSE symbols to WATCHLIST_SYMBOLS in backend .env");
+    grid.innerHTML = "";
+    const wrap = document.createElement("div");
+    wrap.className = "col-span-full";
+    wrap.innerHTML = `<div class="state-wrap">
+      <div class="state-icon empty">👁️</div>
+      <p class="state-title">Watchlist empty</p>
+      <p class="state-msg">Add NSE trading symbols to <code>WATCHLIST_SYMBOLS</code> (comma-separated) in the backend environment, or come back and check the defaults.</p>
+    </div>`;
+    grid.appendChild(wrap);
     return;
   }
 
@@ -64,10 +89,12 @@ function renderCards(items) {
     const cls = hasChange ? pnlClass(item.change_percent) : "pnl-neutral";
     const arrow = hasChange ? pnlArrow(item.change_percent) : "";
     const hue = ((item.symbol.length * 37) + (item.symbol.charCodeAt(0) || 0) * 13) % 360;
-    const tileBg = `hsl(${hue} 70% 52%)`;
-    const tileGlow = `0 10px 24px -8px hsl(${hue} 70% 50% / .6)`;
+    const tileBg = `hsl(${hue} 65% 50%)`;
+    const tileGlow = `0 10px 24px -8px hsla(${hue}, 70%, 50%, .55)`;
     const sparkSeed = _seed(item.symbol + "watch");
-    // Override sparkline trend to match real change direction if available
+    const liveSrc = item.ltp_source || "fallback";
+    const liveIsLive = liveSrc === "live";
+
     let sparkVals = _sparkVals(22, sparkSeed, 0.18, 50);
     if (hasChange) {
       const dir = item.change_percent >= 0 ? 1 : -1;
@@ -80,42 +107,40 @@ function renderCards(items) {
     const spark = _sparkSVG(sparkVals, 140, 36);
 
     return `
-      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 card-hover flex flex-col gap-4 fade-up overflow-hidden"
-           style="animation-delay:${i*55}ms">
-        <!-- Symbol tile + exchange badge -->
+      <div class="wl-card fade-up overflow-hidden" style="animation-delay:${i*55}ms">
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-white font-extrabold tracking-tight"
-                 style="background:${tileBg}; box-shadow:${tileGlow};">
+            <div class="wl-avatar" style="background:${tileBg}; box-shadow:${tileGlow};">
               ${item.symbol.slice(0, 2).toUpperCase()}
             </div>
             <div class="min-w-0">
-              <p class="font-bold text-slate-100 tracking-tight truncate">${escapeHtml(item.symbol)}</p>
+              <p class="wl-name truncate">${escapeHtml(item.symbol)}</p>
               ${item.company_name
-                ? `<p class="text-[11px] text-slate-500 truncate max-w-[160px]">${escapeHtml(item.company_name)}</p>`
-                : `<p class="text-[11px] text-slate-600">NSE</p>`}
+                ? `<p class="wl-sub truncate max-w-[160px]">${escapeHtml(item.company_name)}</p>`
+                : `<p class="wl-sub">NSE</p>`}
             </div>
           </div>
-          <span class="text-[10px] uppercase tracking-wider text-slate-500 bg-slate-700/70 px-2 py-1 rounded-md shrink-0">NSE</span>
+          <span class="wl-tag">NSE</span>
         </div>
 
-        <!-- LTP -->
         <div>
-          <p class="text-[10px] text-slate-500 uppercase tracking-[0.18em] mb-1">Last Traded</p>
-          <p class="text-3xl font-extrabold text-slate-50 tracking-tight leading-none tabular-nums">
+          <p class="wl-kicker mb-1">
+            <span class="live-dot ${liveIsLive ? "" : (liveSrc === "inline" || liveSrc === "derived" ? "stale" : "off")}"
+                  style="width:6px;height:6px;vertical-align:middle;"></span>
+            Last Traded
+          </p>
+          <p class="wl-ltp tabular-nums">
             ${item.last_traded_price !== null && item.last_traded_price !== undefined
               ? formatINR(item.last_traded_price)
-              : `<span class="text-slate-600 text-xl">—</span>`}
+              : `<span style="color:var(--text-muted);font-size:1.25rem;">—</span>`}
           </p>
         </div>
 
-        <!-- Sparkline -->
         <div class="-mx-1 h-10 flex items-end">
           ${spark}
         </div>
 
-        <!-- Change -->
-        <div class="flex items-center justify-between pt-1 border-t border-slate-700/60 mt-auto">
+        <div class="wl-foot mt-auto">
           ${hasChange ? `
             <div class="inline-flex items-center gap-1.5 text-sm font-bold ${cls} tabular-nums">
               <span>${arrow}</span>
@@ -123,8 +148,8 @@ function renderCards(items) {
               ${item.change_absolute != null
                 ? `<span class="text-xs font-semibold opacity-80">(${formatINR(item.change_absolute)})</span>`
                 : ""}
-            </div>` : `<span class="text-xs text-slate-600">No change data</span>`}
-          <span class="text-[10px] uppercase tracking-wider text-slate-500">Live</span>
+            </div>` : `<span class="wl-sub">No change data</span>`}
+          <span class="wl-kicker">${liveIsLive ? "Live" : (liveSrc === "fallback" || liveSrc === "fallback_avg" ? "Delayed" : "Cached")}</span>
         </div>
       </div>`;
   }).join("");
@@ -134,7 +159,7 @@ function renderCards(items) {
 function showSkeletonGrid(count = 6) {
   const grid = document.getElementById("watchlist-grid");
   grid.innerHTML = Array.from({ length: count }, () => `
-    <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-3">
+    <div class="skeleton-card">
       <div class="flex items-center gap-3">
         <div class="skeleton w-11 h-11 rounded-xl"></div>
         <div class="flex-1 space-y-2">
