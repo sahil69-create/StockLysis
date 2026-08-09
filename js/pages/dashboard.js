@@ -102,6 +102,66 @@ async function checkHealth() {
   }
 }
 
+// ── Connection Status Banner ──────────────────────────────────────────────────
+async function renderConnectionStatus() {
+  const el = document.getElementById("connection-status");
+  try {
+    const diag = await API.getDiagnostic();
+    
+    // If overall is ready and not in demo mode, hide banner
+    if (diag.overall === "ready" && !diag.credential_status?.force_demo) {
+      el.classList.add("hidden");
+      return;
+    }
+    
+    el.classList.remove("hidden");
+    
+    const isError = diag.overall === "not_configured" || diag.overall === "groww_error";
+    const bgCls = isError ? "bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/20" : "bg-warning-50 dark:bg-warning-500/10 border-warning-200 dark:border-warning-500/20";
+    const iconColor = isError ? "text-error-500" : "text-warning-500";
+    
+    let html = `
+      <div class="rounded-xl border ${bgCls} p-4 mb-6">
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5 ${iconColor}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">${diag.summary}</h3>
+            <div class="mt-2 space-y-2">
+    `;
+    
+    diag.steps.forEach(step => {
+      if (step.status === "fail" || step.status === "warn") {
+        html += `
+          <div class="text-sm text-gray-600 dark:text-gray-300">
+            <span class="font-medium">${step.name}:</span> ${step.message}
+            ${step.action ? `<div class="mt-1 p-2 rounded bg-white/50 dark:bg-black/20 text-xs font-mono">🔧 Action: ${step.action}</div>` : ""}
+          </div>
+        `;
+      }
+    });
+    
+    html += `
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    el.innerHTML = html;
+  } catch (err) {
+    el.classList.remove("hidden");
+    el.innerHTML = `
+      <div class="rounded-xl border bg-error-50 dark:bg-error-500/10 border-error-200 dark:border-error-500/20 p-4 mb-6 text-sm text-error-600 dark:text-error-400">
+        Failed to load connection status: ${err.message}
+      </div>
+    `;
+  }
+}
+
 // ── Stat Cards with icon + sparkline + trend chip ────────────────────────────
 function renderStatCards(data) {
   const el = document.getElementById("stat-cards");
@@ -571,6 +631,9 @@ async function loadDashboard() {
     <div><div class="skeleton h-3 w-1/3 mb-1.5 rounded"></div><div class="skeleton h-2.5 w-full rounded"></div></div>`).join("");
   document.getElementById("analysis-row").innerHTML = Array.from({length: 3}, () => `
     <div class="rounded-xl p-5 h-40 skeleton"></div>`).join("");
+
+  // Fetch connection status independently
+  renderConnectionStatus().catch(err => console.error("Diag failed", err));
 
   try {
     const data = await API.getDashboard();
