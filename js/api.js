@@ -41,6 +41,9 @@ const API = (() => {
     /** GET /health */
     getHealth: () => _get("/health"),
 
+    /** GET /diagnostic */
+    getDiagnostic: () => _get("/diagnostic"),
+
     /** GET /dashboard */
     getDashboard: () => _get("/dashboard"),
 
