@@ -32,17 +32,16 @@
   <meta name="twitter:title" content="Dashboard — Portfolio" />
   <meta name="twitter:description" content="Your portfolio dashboard — overview of total invested value, P&L, top gainers, losers, and allocation at a glance." />
   <meta name="twitter:image" content="https://files.catbox.moe/md1fro.jpg" />
-  <meta name="theme-color" content="#465fff" />
+  <meta name="theme-color" content="#6238ff" />
   <meta name="color-scheme" content="light dark" />
   <script>
     (function () {
       try {
-        var mode = localStorage.getItem("stocklysis.mode") || "dark";
-        var theme = localStorage.getItem("stocklysis.theme") || "blue";
+        var DARK_THEMES = ["finance", "coding", "dark"];
+        var theme = localStorage.getItem("stocklysis.theme") || "dark";
         var html = document.documentElement;
-        if (mode === "dark") html.classList.add("dark");
-        else html.classList.remove("dark");
         html.setAttribute("data-theme", theme);
+        html.classList.toggle("dark", DARK_THEMES.indexOf(theme) !== -1);
       } catch (e) {}
     })();
   </script>
@@ -54,20 +53,7 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              25:  '#f2f7ff',
-              50:  '#ecf3ff',
-              100: '#dde9ff',
-              200: '#c2d6ff',
-              300: '#9cb9ff',
-              400: '#7592ff',
-              500: '#465fff',
-              600: '#3641f5',
-              700: '#2a31d8',
-              800: '#252dae',
-              900: '#262e89',
-              950: '#161950',
-            },
+            brand: { 25: 'var(--brand-25)', 50: 'var(--brand-50)', 100: 'var(--brand-100)', 200: 'var(--brand-200)', 300: 'var(--brand-300)', 400: 'var(--brand-400)', 500: 'var(--brand-500)', 600: 'var(--brand-600)', 700: 'var(--brand-700)', 800: 'var(--brand-800)', 900: 'var(--brand-900)', 950: 'var(--brand-950)' },
             success: {
               50:  '#ecfdf3',
               100: '#d1fadf',
@@ -109,17 +95,17 @@
   </script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body class="bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-200">
+<body class="app-body">
 
   <!-- ===== Page Wrapper Start ===== -->
   <div class="page-wrapper flex h-screen overflow-hidden">
 
     <!-- ===== Sidebar Start ===== -->
-    <aside class="sidebar fixed left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white px-5 dark:border-gray-800 dark:bg-gray-900 lg:static lg:translate-x-0 -translate-x-full lg:translate-x-0">
+    <aside class="sidebar fixed left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r px-5 lg:static">
       <!-- SIDEBAR HEADER -->
       <div class="flex items-center gap-2 pt-8 sidebar-header pb-7 justify-between">
         <a href="dashboard.html" class="flex items-center gap-2">
-          <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/20 text-lg font-bold">
+          <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-brand-500 text-white shadow-lg brand-glow text-lg font-bold">
             📈
           </span>
           <span class="logo text-xl font-bold text-gray-800 dark:text-white/90">
@@ -206,7 +192,7 @@
     <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
 
       <!-- ===== Header Start ===== -->
-      <header class="sticky top-0 z-99999 flex w-full border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <header class="app-header sticky top-0 z-99999 flex w-full">
         <div class="flex grow flex-col items-center justify-between lg:flex-row lg:px-6 w-full">
           <div class="flex w-full items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4 dark:border-gray-800">
             <!-- Hamburger Toggle BTN -->
@@ -239,17 +225,11 @@
             </div>
             <div class="flex items-center gap-3 flex-wrap">
               <span id="last-updated" class="text-xs text-gray-500 dark:text-gray-400 hidden sm:block"></span>
-              <div class="theme-controls hidden sm:flex">
-                <button id="theme-mode-toggle" class="icon-toggle" title="Toggle dark / light">
-                  <svg class="ico-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
-                  <svg class="ico-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                </button>
-              </div>
               <div class="theme-swatches">
-                <button class="swatch" data-theme="blue" title="Blue"></button>
-                <button class="swatch" data-theme="red" title="Red"></button>
-                <button class="swatch" data-theme="lime" title="Lime"></button>
-                <button class="swatch" data-theme="pink" title="Pink"></button>
+                <button class="swatch" data-theme="finance" title="Professional Finance"></button>
+                <button class="swatch" data-theme="coding" title="Programmer / Coding"></button>
+                <button class="swatch" data-theme="dark" title="Modern Dark"></button>
+                <button class="swatch" data-theme="light" title="Minimal Light"></button>
               </div>
               <button id="refresh-btn" onclick="loadDashboard()"
                 class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 transition">

@@ -163,18 +163,24 @@ function applyFilters() {
 }
 
 // ── Main loader ───────────────────────────────────────────────────────────────
-async function loadOrders() {
+// silent=true (interval auto-refresh) skips the skeleton wipe and success
+// toast so periodic updates patch the table in place instead of flashing.
+async function loadOrders(opts = {}) {
+  const silent = !!opts.silent;
   const tbody = document.getElementById("orders-body");
-  tbody.innerHTML = skeletonRows(8, 8);
-  document.getElementById("orders-summary").innerHTML = "";
+  if (!silent) {
+    tbody.innerHTML = skeletonRows(8, 8);
+    document.getElementById("orders-summary").innerHTML = "";
+  }
 
   try {
     const data = await API.getOrders();
     _allOrders = data.orders || [];
     renderSummary(_allOrders);
     applyFilters();
-    showToast(`${_allOrders.length} orders loaded`, "success", 2000);
+    if (!silent) showToast(`${_allOrders.length} orders loaded`, "success", 2000);
   } catch (err) {
+    if (silent) return; // keep the last-good table rather than replacing it with an error on a background tick
     tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-12"></td></tr>`;
     showError(tbody.querySelector("td"), err.message);
     showToast(err.message, "error");
@@ -191,6 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("filter-type").addEventListener("change", applyFilters);
 
   if (CONFIG.REFRESH_INTERVAL_MS > 0) {
-    setInterval(loadOrders, CONFIG.REFRESH_INTERVAL_MS);
+    setInterval(() => loadOrders({ silent: true }), CONFIG.REFRESH_INTERVAL_MS);
   }
 });

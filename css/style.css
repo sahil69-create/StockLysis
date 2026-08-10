@@ -1,29 +1,20 @@
 /* ==========================================================================
-   TailAdmin-inspired Design System for StockLysis
-   Palette: TailAdmin (brand #465fff · Outfit font)
+   StockLysis Design System — 4 fully self-contained themes
+   Each theme redefines background/surface/border/text tiers, the brand
+   accent scale, chart colors, and gain/loss tones — not just an accent hue.
    ========================================================================== */
 
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-/* ── Tailwind compatible CSS variables (used by both CSS + inline classes) ── */
+/* ── Shared tokens (identical across every theme) ─────────────────────────── */
 :root {
   color-scheme: light dark;
 
-  /* Brand — TailAdmin #465fff royal blue */
-  --brand-25:  #f2f7ff;
-  --brand-50:  #ecf3ff;
-  --brand-100: #dde9ff;
-  --brand-200: #c2d6ff;
-  --brand-300: #9cb9ff;
-  --brand-400: #7592ff;
-  --brand-500: #465fff;
-  --brand-600: #3641f5;
-  --brand-700: #2a31d8;
-  --brand-800: #252dae;
-  --brand-900: #262e89;
-  --brand-950: #161950;
-
-  /* Gray scale */
+  /* Gray scale — used for a handful of legacy utility classes only;
+     each theme's real surfaces come from --bg-*/--border/--text below. */
   --gray-25:  #fcfcfd;
   --gray-50:  #f9fafb;
   --gray-100: #f2f4f7;
@@ -38,7 +29,7 @@
   --gray-950: #0c111d;
   --gray-dark: #1a2231;
 
-  /* Semantic */
+  /* Semantic status colors — shared, not theme-tinted */
   --success-500: #12b76a;
   --success-600: #039855;
   --success-100: #d1fadf;
@@ -56,84 +47,107 @@
   --purple-500:  #7a5af8;
   --pink-500:    #ee46bc;
 
-  /* Shadows */
   --shadow-xs:  0px 1px 2px 0px rgba(16, 24, 40, 0.05);
   --shadow-sm:  0px 1px 3px 0 rgba(16,24,40,.10), 0 1px 2px 0 rgba(16,24,40,.06);
   --shadow-md:  0 4px 8px -2px rgba(16,24,40,.10), 0 2px 4px -2px rgba(16,24,40,.06);
   --shadow-lg:  0 12px 16px -4px rgba(16,24,40,.08), 0 4px 6px -2px rgba(16,24,40,.03);
   --shadow-xl:  0 20px 24px -4px rgba(16,24,40,.08), 0 8px 8px -4px rgba(16,24,40,.03);
-  --shadow-focus-ring: 0 0 0 4px rgba(70,95,255,.12);
 
-  /* Typography */
   --font-sans: "Outfit", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-/* ── Color Themes (Blue / Red / Lime / Pink) ── Solid only, NO GRADIENTS ──── */
-
-/* Theme: Blue (default) */
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme 3: Modern Dark (default) — vivid indigo on near-black neutrals.
+   Closest to the original StockLysis look; used as the pre-JS fallback too.
+   ────────────────────────────────────────────────────────────────────────── */
 :root,
-[data-theme="blue"] {
-  --brand-25:  #f2f7ff;  --brand-50:  #ecf3ff;  --brand-100: #dde9ff;
-  --brand-200: #c2d6ff;  --brand-300: #9cb9ff;  --brand-400: #7592ff;
-  --brand-500: #465fff;  --brand-600: #3641f5;  --brand-700: #2a31d8;
-  --brand-800: #252dae;  --brand-900: #262e89;  --brand-950: #161950;
-  --shadow-focus-ring: 0 0 0 4px rgba(70,95,255,.12);
-}
+[data-theme="dark"] {
+  --bg-body: #0d0f14;    --bg-surface: #14161d;  --bg-elev: #191c25;
+  --border:  #262a35;    --bg-soft:    #191d27;  --bg-hover:#1f2330;
+  --text:    #eef0f5;    --text-mid:   #a6acbb;  --text-muted:#6d7385;
 
-/* Theme: Red */
-[data-theme="red"] {
-  --brand-25:  #fff5f5;  --brand-50:  #fef2f2;  --brand-100: #fee2e2;
-  --brand-200: #fecaca;  --brand-300: #fca5a5;  --brand-400: #f87171;
-  --brand-500: #ef4444;  --brand-600: #dc2626;  --brand-700: #b91c1c;
-  --brand-800: #991b1b;  --brand-900: #7f1d1d;  --brand-950: #450a0a;
-  --shadow-focus-ring: 0 0 0 4px rgba(239,68,68,.12);
-}
+  --brand-25:  #f4f2ff;  --brand-50:  #ece7ff;  --brand-100: #dcd4ff;
+  --brand-200: #beb0ff;  --brand-300: #9c85ff;  --brand-400: #7d5dff;
+  --brand-500: #6238ff;  --brand-600: #4f28e0;  --brand-700: #3f1eb3;
+  --brand-800: #331a8c;  --brand-900: #2a186f;  --brand-950: #180d3f;
+  --shadow-focus-ring: 0 0 0 4px rgba(98,56,255,.18);
 
-/* Theme: Lime */
-[data-theme="lime"] {
-  --brand-25:  #f7fee7;  --brand-50:  #ecfccb;  --brand-100: #d9f99d;
-  --brand-200: #bef264;  --brand-300: #a3e635;  --brand-400: #84cc16;
-  --brand-500: #65a30d;  --brand-600: #4d7c0f;  --brand-700: #3f6212;
-  --brand-800: #365314;  --brand-900: #1a2e05;  --brand-950: #0a1601;
-  --shadow-focus-ring: 0 0 0 4px rgba(101,163,13,.14);
-}
+  --gw-gain: #22d3a5; --gw-gain-soft: rgba(34,211,165,.15);
+  --gw-loss: #ff5f7e; --gw-loss-soft: rgba(255,95,126,.15);
 
-/* Theme: Pink */
-[data-theme="pink"] {
-  --brand-25:  #fff1f2;  --brand-50:  #ffe4e6;  --brand-100: #fecdd3;
-  --brand-200: #fda4af;  --brand-300: #fb7185;  --brand-400: #f43f5e;
-  --brand-500: #e11d48;  --brand-600: #be123c;  --brand-700: #9f1239;
-  --brand-800: #881337;  --brand-900: #4c0519;  --brand-950: #2a0311;
-  --shadow-focus-ring: 0 0 0 4px rgba(225,29,72,.12);
+  --chart-1: #6238ff; --chart-2: #10b981; --chart-3: #f59e0b; --chart-4: #ef4444;
+  --chart-5: #22c55e; --chart-6: #a855f7; --chart-7: #14b8a6; --chart-8: #ec4899;
 }
+:root, [data-theme="dark"] { color-scheme: dark; }
 
-/* Dark mode — natural, warm-toned (not harsh pure blacks) */
-html.dark body,
-body.dark {
-  --bg-body: #0f1218;
-  --bg-surface: #161a22;
-  --bg-elev: #1c212c;
-  --border: #262c3a;
-  --text: #e8ecf1;
-  --text-mid: #a1aab8;
-  --text-muted: #717c8e;
-  --bg-soft: #1a1f2b;
-  --bg-hover: #202635;
-}
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme 1: Professional Finance — deep navy + gold, banking-terminal feel.
+   ────────────────────────────────────────────────────────────────────────── */
+[data-theme="finance"] {
+  --bg-body: #0a0f1c;    --bg-surface: #0f172a;  --bg-elev: #131e35;
+  --border:  #22314f;    --bg-soft:    #172440;  --bg-hover:#1c2c4d;
+  --text:    #eef2fa;    --text-mid:   #a8b6d1;  --text-muted:#77869f;
 
-/* Light mode — WCAG AA contrast compliant (≥ 4.5:1 for body text) */
-html:not(.dark) body,
-body:not(.dark) {
-  --bg-body: #f5f6f8;
-  --bg-surface: #ffffff;
-  --bg-elev: #fafbfc;
-  --border: #d9dde3;
-  --text: #141821;
-  --text-mid: #4b5565;
-  --text-muted: #6b7280;
-  --bg-soft: #f1f3f6;
-  --bg-hover: #eef0f4;
+  --brand-25:  #fdf8ec;  --brand-50:  #faf0d6;  --brand-100: #f3e0ac;
+  --brand-200: #e8c876;  --brand-300: #dcae4c;  --brand-400: #cf9a32;
+  --brand-500: #c08a26;  --brand-600: #a3721c;  --brand-700: #825914;
+  --brand-800: #63430f;  --brand-900: #47300b;  --brand-950: #241805;
+  --shadow-focus-ring: 0 0 0 4px rgba(192,138,38,.18);
+
+  --gw-gain: #1f9d6b; --gw-gain-soft: rgba(31,157,107,.16);
+  --gw-loss: #d1495b; --gw-loss-soft: rgba(209,73,91,.16);
+
+  --chart-1: #c08a26; --chart-2: #2f7d6b; --chart-3: #5b7fbf; --chart-4: #8a9a5b;
+  --chart-5: #b5651d; --chart-6: #d4af37; --chart-7: #6b5b95; --chart-8: #a65a5a;
+  color-scheme: dark;
 }
+html[data-theme="finance"] body { font-family: "IBM Plex Sans", var(--font-sans); }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme 2: Programmer / Coding — near-black terminal, neon green, monospace.
+   ────────────────────────────────────────────────────────────────────────── */
+[data-theme="coding"] {
+  --bg-body: #080a08;    --bg-surface: #0d100d;  --bg-elev: #10140f;
+  --border:  #1e2b1f;    --bg-soft:    #121a13;  --bg-hover:#17231a;
+  --text:    #d9ffe6;    --text-mid:   #83a892;  --text-muted:#557060;
+
+  --brand-25:  #eafff3;  --brand-50:  #d3ffe6;  --brand-100: #a3ffce;
+  --brand-200: #6dffb2;  --brand-300: #3dff98;  --brand-400: #22e883;
+  --brand-500: #17c96e;  --brand-600: #10a058;  --brand-700: #0c7a44;
+  --brand-800: #095c34;  --brand-900: #063f24;  --brand-950: #032414;
+  --shadow-focus-ring: 0 0 0 4px rgba(23,201,110,.22);
+
+  --gw-gain: #2de88a; --gw-gain-soft: rgba(45,232,138,.16);
+  --gw-loss: #ff5d6c; --gw-loss-soft: rgba(255,93,108,.16);
+
+  --chart-1: #17c96e; --chart-2: #22d3ee; --chart-3: #eab308; --chart-4: #a78bfa;
+  --chart-5: #f472b6; --chart-6: #38bdf8; --chart-7: #facc15; --chart-8: #fb923c;
+  color-scheme: dark;
+}
+html[data-theme="coding"] body { font-family: "JetBrains Mono", ui-monospace, "Fira Code", monospace; }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme 4: Minimal Light — clean white, restrained slate-indigo accent.
+   ────────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-body: #fafafa;    --bg-surface: #ffffff;  --bg-elev: #f7f7f8;
+  --border:  #e7e7ea;    --bg-soft:    #f2f2f4;  --bg-hover:#eeeef1;
+  --text:    #1a1a1e;    --text-mid:   #6b6b74;  --text-muted:#95959e;
+
+  --brand-25:  #f5f6fb;  --brand-50:  #eceef8;  --brand-100: #d8dcf1;
+  --brand-200: #b3bae3;  --brand-300: #8a93d1;  --brand-400: #636fbe;
+  --brand-500: #4550a8;  --brand-600: #383f8a;  --brand-700: #2d336d;
+  --brand-800: #242853;  --brand-900: #1c203f;  --brand-950: #0f111f;
+  --shadow-focus-ring: 0 0 0 4px rgba(69,80,168,.10);
+
+  --gw-gain: #0a9d63; --gw-gain-soft: rgba(10,157,99,.10);
+  --gw-loss: #d1394e; --gw-loss-soft: rgba(209,57,78,.10);
+
+  --chart-1: #4550a8; --chart-2: #0a9d63; --chart-3: #c98a1f; --chart-4: #c94f4f;
+  --chart-5: #4f9dc9; --chart-6: #8a5fc9; --chart-7: #2f9d8f; --chart-8: #c95f9d;
+  color-scheme: light;
+}
+html[data-theme="light"] body { font-family: "Inter", var(--font-sans); }
 
 /* ── Global resets ────────────────────────────────────────────────────────── */
 *,
@@ -155,6 +169,42 @@ body {
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 input, select { font-family: inherit; }
+
+/* app-body/app-header exist because the page markup used to hardcode
+   Tailwind's bg-gray-*/dark:bg-gray-* utilities directly, which have higher
+   specificity than the plain `body{}` rule above and silently overrode it —
+   the page background/header never actually followed the active theme. */
+.app-body { background: var(--bg-body); color: var(--text); }
+.app-header { background: var(--bg-surface); border-bottom: 1px solid var(--border); }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Tailwind interop shim
+   The page markup uses Tailwind's static gray-50..900 / dark:* utilities
+   directly (bg-white, border-gray-200, dark:bg-gray-900, dark:text-white/90,
+   etc.) for the bulk of card/table/divider styling. Tailwind CDN compiles
+   those to fixed hex values from its config, so they never move with our
+   CSS-variable-driven themes on their own. Rather than rewrite every class
+   list in five HTML files, redirect the exact compiled utility classes to
+   the active theme's tokens; !important is warranted here since we are
+   deliberately overriding a third-party generated stylesheet, not our own.
+   ────────────────────────────────────────────────────────────────────────── */
+.bg-white                          { background: var(--bg-surface) !important; }
+.border-gray-100, .border-gray-200 { border-color: var(--border) !important; }
+.text-gray-800                     { color: var(--text) !important; }
+.text-gray-500                     { color: var(--text-mid) !important; }
+.text-gray-400                     { color: var(--text-muted) !important; }
+.bg-gray-700                       { background: var(--bg-elev) !important; }
+.bg-gray-400                       { background: var(--text-muted) !important; }
+.divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border) !important; }
+
+html.dark .dark\:bg-gray-900,
+html.dark .dark\:bg-gray-800       { background: var(--bg-elev) !important; }
+html.dark .dark\:border-gray-800,
+html.dark .dark\:border-gray-700   { border-color: var(--border) !important; }
+html.dark .dark\:text-gray-400     { color: var(--text-mid) !important; }
+html.dark .dark\:text-white\/90    { color: var(--text) !important; }
+html.dark .dark\:bg-white\/\[0\.03\] { background: var(--bg-elev) !important; }
+html.dark .dark\:divide-gray-800 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border) !important; }
 
 /* ── Scrollbars ───────────────────────────────────────────────────────────── */
 * { scrollbar-width: thin; scrollbar-color: var(--gray-300) transparent; }
@@ -202,9 +252,15 @@ body.dark .sidebar {
   .sidebar { position: static; transform: translateX(0) !important; }
 }
 
-/* Mobile — off-canvas default */
-.sidebar:not(.open) { transform: translateX(-100%); }
-@media (min-width: 1024px) { .sidebar:not(.open) { transform: translateX(0); } }
+/* Mobile — off-canvas default, slides in when .open is toggled by JS.
+   !important guards against the stray Tailwind `-translate-x-full` utility
+   class still present on the <aside> markup (same 0-1-0 specificity, and
+   without this override it never gets superseded once .open is added). */
+.sidebar:not(.open) { transform: translateX(-100%) !important; }
+.sidebar.open { transform: translateX(0) !important; }
+@media (min-width: 1024px) {
+  .sidebar:not(.open) { transform: translateX(0) !important; }
+}
 
 .sidebar-header {
   display: flex;
@@ -431,14 +487,40 @@ body.dark .mobile-brand span {
   border-radius: .5rem;
   background: transparent;
   color: var(--text-mid);
-  display: grid; place-items: center;
-  transition: background .15s ease, color .15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
 html.dark .hamburger,
 body.dark .hamburger { border-color: var(--gray-800); }
-.hamburger:hover { background: var(--gray-100); color: var(--gray-700); }
+.hamburger:hover { background: var(--gray-100); color: var(--gray-700); border-color: var(--brand-300); }
 html.dark .hamburger:hover,
-body.dark .hamburger:hover { background: rgba(255,255,255,.05); }
+body.dark .hamburger:hover { background: rgba(255,255,255,.05); border-color: var(--brand-700); }
+
+/* Hamburger bars — the three <span> children inside the button, stacked via
+   transform offsets (not layout gap) so they can rotate into an X in place. */
+.hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform .25s ease, opacity .2s ease;
+}
+.hamburger span:nth-child(1) { transform: translateY(-6px); }
+.hamburger span:nth-child(3) { transform: translateY(6px); }
+.hamburger.open span:nth-child(1) { transform: translateY(0) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(0) rotate(-45deg); }
+
+/* Desktop — hamburger has nothing to open (sidebar is always visible), so it
+   must not render at all, not just be visually hidden. */
+@media (min-width: 1024px) {
+  .hamburger { display: none; }
+}
 
 .search-wrap {
   position: relative;
@@ -721,6 +803,36 @@ body.dark .stat-card {
   color: var(--text-mid);
   margin: 0;
 }
+
+/* Portfolio Value card's Invested / Current / Today breakdown row */
+.stat-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .5rem;
+  margin-top: .1rem;
+}
+.stat-breakdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.stat-breakdown-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.stat-breakdown-value {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .stat-spark {
   position: absolute;
   right: 1rem;
@@ -881,9 +993,16 @@ body.dark .legend-row:hover { background: rgba(255,255,255,.04); }
 .legend-meta {
   display: flex; align-items: center; gap: .6rem;
 }
+.legend-value {
+  font-size: 11.5px; font-weight: 500; color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 .legend-pct {
   font-size: 12px; font-weight: 700; color: var(--text-mid);
   font-variant-numeric: tabular-nums;
+  min-width: 42px;
+  text-align: right;
 }
 .legend-bar-outer {
   width: 60px; height: 5px;
@@ -910,8 +1029,6 @@ html.dark .legend-bar-outer, body.dark .legend-bar-outer { background: rgba(255,
   align-items: flex-start;
   gap: 1rem;
 }
-html.dark .analysis-card,
-body.dark .analysis-card { border-color: var(--gray-800); background: var(--gray-900); }
 .analysis-icon {
   flex: 0 0 auto;
   width: 44px; height: 44px;
@@ -998,7 +1115,7 @@ html.dark .search-field svg, body.dark .search-field svg { fill: var(--gray-400)
   transition: border-color .15s ease, box-shadow .15s ease;
 }
 html.dark .search-field input, body.dark .search-field input {
-  border-color: var(--gray-800);
+  border-color: var(--border);
   color: rgba(255,255,255,.9);
 }
 .search-field input::placeholder { color: var(--gray-400); }
@@ -1254,8 +1371,8 @@ html.dark .pnl-row-track, body.dark .pnl-row-track { background: rgba(255,255,25
   min-width: 4px;
   transition: width .3s ease;
 }
-.pnl-row-bar.up { background: var(--success-500); }
-.pnl-row-bar.down { background: var(--error-500); }
+.pnl-row-bar.up { background: var(--gw-gain); opacity: .75; }
+.pnl-row-bar.down { background: var(--gw-loss); opacity: .75; }
 .pnl-row-bar.flat { background: var(--gray-400); }
 .pnl-row-val {
   text-align: right;
@@ -1577,11 +1694,18 @@ html.dark .theme-swatches, body.dark .theme-swatches {
   padding: 0;
 }
 .swatch:hover { transform: scale(1.12); }
-.swatch[data-theme="blue"] { background: #465fff; }
-.swatch[data-theme="red"]  { background: #ef4444; }
-.swatch[data-theme="lime"] { background: #65a30d; }
-.swatch[data-theme="pink"] { background: #e11d48; }
+/* Each swatch shows its theme's base surface tone with an inset ring in its
+   accent color — communicates "a different look", not just a different hue. */
+.swatch[data-theme="finance"] { background: #0f172a; box-shadow: inset 0 0 0 2px #c08a26; }
+.swatch[data-theme="coding"]  { background: #0d100d; box-shadow: inset 0 0 0 2px #17c96e; }
+.swatch[data-theme="dark"]    { background: #14161d; box-shadow: inset 0 0 0 2px #6238ff; }
+.swatch[data-theme="light"]   { background: #ffffff; box-shadow: inset 0 0 0 2px #4550a8, inset 0 0 0 1px var(--border); }
 .swatch.active { border-color: var(--text); box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 3px var(--text); }
+
+/* Theme-reactive replacements for opacity-suffixed Tailwind brand utilities
+   (those break once brand.* points at var() instead of a literal hex). */
+.brand-glow { box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--brand-500) 55%, transparent); }
+.theme-focus-ring:focus { box-shadow: var(--shadow-focus-ring); outline: none; }
 
 /* ── P&L / Gain / Loss Colors (WCAG AA compliant both modes) ────────────── */
 .pnl-positive { color: #037a4e !important; font-weight: 600; }
@@ -1805,6 +1929,10 @@ html.dark .weight-bar, body.dark .weight-bar { background: rgba(255,255,255,0.08
 }
 .state-icon.empty  { background: var(--bg-soft); }
 .state-icon.err  { background: color-mix(in srgb, var(--error-500) 15%, var(--bg-soft)); }
+.empty-illustration {
+  margin-bottom: .25rem;
+  animation: fadeUp .45s cubic-bezier(.2,.7,.2,1) both;
+}
 .state-title {
   margin: 0;
   font-size: 15px;
@@ -1944,6 +2072,22 @@ html.dark .badge-sell, body.dark .badge-sell { color: var(--error-400); }
   flex-shrink: 0;
   font-weight: 700;
 }
+.wl-remove-btn {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  border-radius: 999px;
+  display: grid; place-items: center;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.wl-remove-btn svg { width: 11px; height: 11px; }
+.wl-remove-btn:hover {
+  background: color-mix(in srgb, var(--gw-loss) 12%, transparent);
+  border-color: var(--gw-loss);
+  color: var(--gw-loss);
+}
 .wl-kicker {
   font-size: 10px;
   letter-spacing: .18em;
@@ -1970,3 +2114,91 @@ html.dark .badge-sell, body.dark .badge-sell { color: var(--error-400); }
   padding-top: .75rem;
   border-top: 1px solid var(--border);
 }
+
+/* =========================================================================
+   Groww-style Holdings view (.gw-*)
+   Semantic gain/loss colors are fixed (green/red) independent of the
+   accent palette, matching how broker apps signal direction.
+   ========================================================================= */
+:root {
+  --gw-gain: #0aa66e;
+  --gw-gain-soft: rgba(10, 166, 110, 0.14);
+  --gw-loss: #e0446a;
+  --gw-loss-soft: rgba(224, 68, 106, 0.13);
+}
+html.dark body, body.dark {
+  --gw-gain: #16c98f;
+  --gw-gain-soft: rgba(22, 201, 143, 0.15);
+  --gw-loss: #ff5a72;
+  --gw-loss-soft: rgba(255, 90, 114, 0.15);
+}
+.gw-gain { color: var(--gw-gain); }
+.gw-loss { color: var(--gw-loss); }
+
+.gw-wrap { max-width: 760px; margin: 0 auto; }
+
+/* Index chips */
+.gw-indices { display: flex; gap: .75rem; margin-bottom: 1rem; }
+.gw-index {
+  flex: 1; min-width: 0; background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: .7rem .9rem;
+}
+.gw-index .gw-ix-name { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.gw-index .gw-ix-val { font-size: 1rem; font-weight: 700; margin-top: .2rem; color: var(--text); letter-spacing: -.01em; }
+.gw-index .gw-ix-chg { font-size: 12px; font-weight: 600; margin-top: .1rem; }
+
+/* Summary card */
+.gw-summary {
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: 18px;
+  padding: 1.15rem 1.25rem .4rem; box-shadow: 0 12px 30px -22px rgba(0,0,0,.55); margin-bottom: 1.1rem;
+}
+.gw-sum-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.gw-count { display: inline-flex; align-items: center; gap: .4rem; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+.gw-total { font-size: 2.15rem; font-weight: 800; letter-spacing: -.03em; color: var(--text); margin-top: .5rem; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.gw-eye {
+  appearance: none; border: 1px solid var(--border); background: var(--bg-elev); color: var(--text-muted);
+  width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; transition: color .15s, border-color .15s;
+}
+.gw-eye:hover { color: var(--text); border-color: var(--brand-500); }
+.gw-eye svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+.gw-rows { margin-top: 1rem; border-top: 1px dashed var(--border); padding-top: .25rem; }
+.gw-srow { display: flex; align-items: center; justify-content: space-between; padding: .7rem 0; border-bottom: 1px solid var(--border); }
+.gw-srow:last-child { border-bottom: none; }
+.gw-srow .gw-lab { color: var(--text-mid); font-size: .9rem; }
+.gw-srow .gw-amt { font-size: .95rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Controls */
+.gw-controls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 .25rem .35rem; }
+.gw-col-label { color: var(--text-muted); font-size: .8rem; }
+
+/* Holdings list */
+.gw-list { display: flex; flex-direction: column; }
+.gw-holding {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: .9rem;
+  padding: .95rem .5rem; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 10px; transition: background .12s;
+}
+.gw-holding:hover { background: var(--bg-hover); }
+.gw-h-left { display: flex; align-items: center; gap: .7rem; min-width: 0; }
+.gw-h-name { font-size: 1rem; font-weight: 650; color: var(--text); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gw-h-sub { font-size: .78rem; color: var(--text-muted); margin-top: .18rem; font-variant-numeric: tabular-nums; }
+.gw-spark { width: 84px; height: 32px; display: block; }
+.gw-h-right { text-align: right; min-width: 92px; }
+.gw-h-cur { font-size: .98rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.gw-h-inv { font-size: .78rem; color: var(--text-muted); margin-top: .18rem; font-variant-numeric: tabular-nums; }
+
+/* Expandable detail */
+.gw-detail {
+  grid-column: 1 / -1; display: none; gap: .6rem 1.5rem; padding: .35rem .25rem 1rem;
+  border-bottom: 1px solid var(--border); grid-template-columns: repeat(2, 1fr);
+}
+.gw-holding.open + .gw-detail,
+.gw-detail.open { display: grid; }
+.gw-dt { display: flex; align-items: center; justify-content: space-between; font-size: .82rem; }
+.gw-dt .k { color: var(--text-muted); }
+.gw-dt .v { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .gw-detail { grid-template-columns: 1fr; } }
+
+.gw-masked { letter-spacing: .05em; }
+.gw-live { display: inline-flex; align-items: center; gap: .35rem; font-size: 11px; color: var(--text-muted); }
+.gw-updated { text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 1.1rem; }

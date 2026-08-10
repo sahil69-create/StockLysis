@@ -1,12 +1,23 @@
 /* =========================================================================
-   Theme Manager: Light/Dark mode + 4 color palettes (Blue/Red/Lime/Pink)
+   Theme Manager: 4 fully self-contained themes
+     finance — Professional Finance (navy + gold)
+     coding  — Programmer / Coding (terminal black + neon green, monospace)
+     dark    — Modern Dark (default; near-black + indigo)
+     light   — Minimal Light (white + restrained slate-indigo)
+   Each theme owns its own background/surface/border/text tiers, so there is
+   no separate light/dark toggle — picking a theme picks its base too.
    Persistence: localStorage — applies instantly before first paint (see HEAD)
    ========================================================================= */
 (function () {
   var THEME_KEY = "stocklysis.theme";
-  var MODE_KEY = "stocklysis.mode";
-  var VALID_THEMES = ["blue", "red", "lime", "pink"];
-  var VALID_MODES = ["light", "dark"];
+  var VALID_THEMES = ["finance", "coding", "dark", "light"];
+  var DARK_THEMES = ["finance", "coding", "dark"]; // reuse existing html.dark component overrides
+  var THEME_META = {
+    finance: { accent: "#c08a26", label: "Professional Finance" },
+    coding:  { accent: "#17c96e", label: "Programmer / Coding" },
+    dark:    { accent: "#6238ff", label: "Modern Dark" },
+    light:   { accent: "#4550a8", label: "Minimal Light" },
+  };
 
   function getStored(key, fallback, valid) {
     try {
@@ -20,42 +31,22 @@
     try { localStorage.setItem(key, value); } catch (e) {}
   }
 
-  function applyMode(mode) {
-    var html = document.documentElement;
-    if (mode === "dark") html.classList.add("dark");
-    else html.classList.remove("dark");
-  }
-
   function applyTheme(theme) {
     var html = document.documentElement;
-    for (var i = 0; i < VALID_THEMES.length; i++) {
-      html.removeAttribute("data-theme-" + VALID_THEMES[i]);
-    }
     html.setAttribute("data-theme", theme);
+    html.classList.toggle("dark", DARK_THEMES.indexOf(theme) !== -1);
+
     var meta = document.querySelector('meta[name="theme-color"]');
-    var accent = { blue: "#465fff", red: "#ef4444", lime: "#65a30d", pink: "#e11d48" };
-    if (meta) meta.setAttribute("content", accent[theme] || "#465fff");
+    if (meta) meta.setAttribute("content", (THEME_META[theme] || THEME_META.dark).accent);
   }
 
   function applyAll() {
-    applyMode(getStored(MODE_KEY, "dark", VALID_MODES));
-    applyTheme(getStored(THEME_KEY, "blue", VALID_THEMES));
+    applyTheme(getStored(THEME_KEY, "dark", VALID_THEMES));
   }
 
   function initToggles() {
-    var modeBtn = document.getElementById("theme-mode-toggle");
-    if (modeBtn) {
-      updateModeButton(modeBtn, getStored(MODE_KEY, "dark", VALID_MODES));
-      modeBtn.addEventListener("click", function () {
-        var next = getStored(MODE_KEY, "dark", VALID_MODES) === "dark" ? "light" : "dark";
-        setStored(MODE_KEY, next);
-        applyMode(next);
-        updateModeButton(modeBtn, next);
-      });
-    }
-
     var swatches = document.querySelectorAll(".swatch[data-theme]");
-    var currentTheme = getStored(THEME_KEY, "blue", VALID_THEMES);
+    var currentTheme = getStored(THEME_KEY, "dark", VALID_THEMES);
     swatches.forEach(function (sw) {
       if (sw.getAttribute("data-theme") === currentTheme) sw.classList.add("active");
       sw.addEventListener("click", function () {
@@ -68,34 +59,10 @@
     });
   }
 
-  function updateModeButton(btn, mode) {
-    var sun = btn.querySelector(".ico-sun");
-    var moon = btn.querySelector(".ico-moon");
-    if (mode === "dark") {
-      if (sun) sun.style.display = "";
-      if (moon) moon.style.display = "none";
-      btn.title = "Light mode";
-    } else {
-      if (sun) sun.style.display = "none";
-      if (moon) moon.style.display = "";
-      btn.title = "Dark mode";
-    }
-  }
-
   /* ── Public API (also available before load) ──────────────────────────── */
   window.StockLysisTheme = {
     get: function () {
-      return {
-        mode: getStored(MODE_KEY, "dark", VALID_MODES),
-        theme: getStored(THEME_KEY, "blue", VALID_THEMES)
-      };
-    },
-    setMode: function (mode) {
-      if (VALID_MODES.indexOf(mode) === -1) return;
-      setStored(MODE_KEY, mode);
-      applyMode(mode);
-      var btn = document.getElementById("theme-mode-toggle");
-      if (btn) updateModeButton(btn, mode);
+      return { theme: getStored(THEME_KEY, "dark", VALID_THEMES) };
     },
     setTheme: function (theme) {
       if (VALID_THEMES.indexOf(theme) === -1) return;
@@ -105,7 +72,8 @@
       swatches.forEach(function (s) {
         s.classList.toggle("active", s.getAttribute("data-theme") === theme);
       });
-    }
+    },
+    themes: THEME_META,
   };
 
   if (document.readyState === "loading") {

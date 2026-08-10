@@ -28,22 +28,21 @@
   <meta name="twitter:title" content="StockLysis — Stock Market Dashboard" />
   <meta name="twitter:description" content="Track your stock portfolio in real-time. View holdings, positions, orders, and watchlist all in one place." />
   <meta name="twitter:image" content="https://files.catbox.moe/md1fro.jpg" />
-  <meta name="theme-color" content="#465fff" />
+  <meta name="theme-color" content="#6238ff" />
   <meta name="color-scheme" content="light dark" />
   <script>
     (function () {
       try {
-        var mode = localStorage.getItem("stocklysis.mode") || "dark";
-        var theme = localStorage.getItem("stocklysis.theme") || "blue";
+        var DARK_THEMES = ["finance", "coding", "dark"];
+        var theme = localStorage.getItem("stocklysis.theme") || "dark";
         var html = document.documentElement;
-        if (mode === "dark") html.classList.add("dark");
-        else html.classList.remove("dark");
         html.setAttribute("data-theme", theme);
+        html.classList.toggle("dark", DARK_THEMES.indexOf(theme) !== -1);
       } catch (e) {}
     })();
   </script>
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-800 dark:text-gray-200 min-h-screen flex items-center justify-center">
+<body class="app-body min-h-screen flex items-center justify-center">
   <p>Redirecting to <a href="dashboard.html" class="text-brand-500 hover:underline font-medium">Dashboard</a>…</p>
 </body>
 </html>

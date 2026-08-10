@@ -37,12 +37,22 @@ function renderTable(positions) {
   const tbody = document.getElementById("positions-body");
 
   if (!positions.length) {
+    const headerBox = document.getElementById("positions-header-summary");
+    if (headerBox) headerBox.innerHTML = "";
     tbody.innerHTML = `
-      <tr><td colspan="7" class="px-4 py-14 text-center">
+      <tr><td colspan="6" class="px-4 py-16 text-center">
         <div class="state-wrap">
-          <div class="state-icon empty">📋</div>
-          <p class="state-title">No intraday positions</p>
-          <p class="state-msg">Positions are intraday and reset at the end of each trading day. They'll appear here once you take a position.</p>
+          <svg class="empty-illustration" width="128" height="96" viewBox="0 0 128 96" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="14" y="30" width="100" height="54" rx="10" fill="var(--bg-soft)" stroke="var(--border)" stroke-width="1.5"/>
+            <path d="M14 52h27a5 5 0 0 1 4.6 3l3 7a5 5 0 0 0 4.6 3h21.6a5 5 0 0 0 4.6-3l3-7a5 5 0 0 1 4.6-3h27" stroke="var(--border)" stroke-width="1.5" fill="none"/>
+            <rect x="34" y="12" width="60" height="34" rx="8" fill="var(--bg-elev)" stroke="var(--border)" stroke-width="1.5"/>
+            <path d="M46 32l9-11 8 8 11-13" stroke="var(--brand-500)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="74" cy="16" r="3" fill="var(--brand-500)"/>
+            <circle cx="30" cy="66" r="3" fill="var(--border)"/>
+            <circle cx="98" cy="66" r="3" fill="var(--border)"/>
+          </svg>
+          <p class="state-title">No Active Positions</p>
+          <p class="state-msg">Positions are intraday and reset at the end of each trading day. Once you take a position on Groww, it'll appear here automatically.</p>
         </div>
       </td></tr>`;
     return;
@@ -56,8 +66,8 @@ function renderTable(positions) {
 
   const headerBox = document.getElementById("positions-header-summary");
   if (headerBox) {
+    headerBox.className = "positions-header-summary";
     headerBox.innerHTML = `
-      <div class="positions-header-summary">
         <div class="summary-stat">
           <p class="sl">Active</p>
           <p class="sv ${C.primary}">${posCount}</p>
@@ -77,8 +87,7 @@ function renderTable(positions) {
         <div class="summary-stat">
           <p class="sl">Net P&amp;L</p>
           <p class="sv ${netPnl >= 0 ? 'up' : 'down'}">${formatINR(netPnl)}</p>
-        </div>
-      </div>`;
+        </div>`;
   }
 
   tbody.innerHTML = positions.map((p, i) => {
@@ -129,17 +138,21 @@ function renderTable(positions) {
 }
 
 // ── Main loader ───────────────────────────────────────────────────────────────
-async function loadPositions() {
+// silent=true (interval auto-refresh) skips the skeleton wipe and success
+// toast so periodic updates patch the table in place instead of flashing.
+async function loadPositions(opts = {}) {
+  const silent = !!opts.silent;
   const tbody = document.getElementById("positions-body");
-  tbody.innerHTML = skeletonRows(5, 7);
+  if (!silent) tbody.innerHTML = skeletonRows(5, 6);
 
   try {
     const data = await API.getPositions();
     const positions = data.positions || [];
     renderTable(positions);
-    showToast(`${positions.length} position${positions.length !== 1 ? "s" : ""} loaded`, "success", 2000);
+    if (!silent) showToast(`${positions.length} position${positions.length !== 1 ? "s" : ""} loaded`, "success", 2000);
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="7"></td></tr>`;
+    if (silent) return; // keep the last-good table rather than replacing it with an error on a background tick
+    tbody.innerHTML = `<tr><td colspan="6"></td></tr>`;
     showError(tbody.querySelector("td"), err.message);
     showToast(err.message, "error");
   }
@@ -147,23 +160,11 @@ async function loadPositions() {
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-  // Inject summary row into positions page if not yet present
-  if (document.getElementById("positions-header-summary") == null) {
-    const t = document.querySelector(".flex-1.overflow-y-auto > .bg-slate-800.rounded-xl");
-    if (t) {
-      const wrap = document.createElement("div");
-      wrap.className = "bg-slate-800/60 border-b border-slate-700 px-6 py-3 mb-0 rounded-t-xl -mb-px";
-      wrap.id = "positions-header-summary";
-      t.parentNode.insertBefore(wrap, t);
-      t.classList.add("rounded-t-none");
-    }
-  }
-
   setActiveNav();
   checkHealth();
   loadPositions();
 
   if (CONFIG.REFRESH_INTERVAL_MS > 0) {
-    setInterval(loadPositions, CONFIG.REFRESH_INTERVAL_MS);
+    setInterval(() => loadPositions({ silent: true }), CONFIG.REFRESH_INTERVAL_MS);
   }
 });

@@ -4,12 +4,22 @@
  * P&L per-stock bars, and insight cards.
  */
 
-// ── Palette: Premium emerald + amber + violet (no sky blue) ────────────────
-const COLORS = [
-  "#10b981","#f59e0b","#8b5cf6","#ef4444","#22c55e",
-  "#f97316","#a855f7","#14b8a6","#eab308","#ec4899",
-  "#84cc16","#6366f1","#f43f5e","#06b6d4","#0ea5e9",
-];
+// ── Chart palette: reads the active theme's --chart-1..--chart-8 tokens so
+// donut segments / legend swatches recolor with the theme (cycles past 8). ──
+function chartColor(i) {
+  return `var(--chart-${(i % 8) + 1})`;
+}
+
+// Holdings exist but Groww hasn't returned a single live price for any of
+// them (see /diagnostic — live_coverage stays 0 while the account's API key
+// isn't approved for live market data). Total/1-day return, movers, and
+// best/worst performer are all honestly 0 in that state (current == invested),
+// not faked — but presenting that as "flat" reads as broken, so callers use
+// this to show an explicit "live data unavailable" message instead.
+function isLiveDataUnavailable(data, holdingsCount) {
+  const hasHoldings = (holdingsCount || 0) > 0 || (data.invested_amount || 0) > 0;
+  return hasHoldings && (data.live_coverage || 0) === 0;
+}
 
 // ── Real price history cache (one fetch per symbol, shared across widgets) ──
 const _historyCache = new Map();
@@ -59,8 +69,8 @@ function sparklineSVG(values, width = 90, height = 28, colorClass = "") {
   const last = values[values.length - 1];
   const first = values[0];
   const trend = last >= first;
-  const stroke = trend ? "#34d399" : "#f87171";
-  const fill = trend ? "rgba(52,211,153,0.22)" : "rgba(248,113,113,0.18)";
+  const stroke = trend ? "var(--gw-gain)" : "var(--gw-loss)";
+  const fill = trend ? "var(--gw-gain-soft)" : "var(--gw-loss-soft)";
 
   const areaPts = `0,${height} ${pts} ${width},${height}`;
 
@@ -170,14 +180,30 @@ async function renderConnectionStatus() {
 }
 
 // ── Stat Cards with icon + sparkline + trend chip ────────────────────────────
-function renderStatCards(data) {
+function renderStatCards(data, holdingsCount) {
   const el = document.getElementById("stat-cards");
 
+  const liveUnavailable = isLiveDataUnavailable(data, holdingsCount);
+
   const buildCard = (opts) => {
-    const trendLabel = opts.trendOverride != null
-      ? (opts.trendOverride > 0 ? "up" : opts.trendOverride < 0 ? "down" : "flat")
-      : "flat";
-    const trendText = opts.trendText || (trendLabel === "flat" ? "Stable" : trendLabel === "up" ? "Up" : "Down");
+    let chipHtml = opts.chipHtml;
+    if (!chipHtml) {
+      const trendLabel = opts.trendOverride != null
+        ? (opts.trendOverride > 0 ? "up" : opts.trendOverride < 0 ? "down" : "flat")
+        : "flat";
+      const trendText = opts.trendText || (trendLabel === "flat" ? "Stable" : trendLabel === "up" ? "Up" : "Down");
+      chipHtml = `<span class="trend-chip trend-${trendLabel}">${trendText}</span>`;
+    }
+
+    const breakdownHtml = opts.breakdown
+      ? `<div class="stat-breakdown">
+          ${opts.breakdown.map(b => `
+            <div class="stat-breakdown-item">
+              <span class="stat-breakdown-label">${b.label}</span>
+              <span class="stat-breakdown-value ${b.colorClass || ""}">${b.value}</span>
+            </div>`).join("")}
+        </div>`
+      : `<p class="stat-sub">${opts.sub}</p>`;
 
     return `
       <div class="stat-card fade-up overflow-hidden" style="animation-delay: ${opts.delay}ms">
@@ -187,25 +213,31 @@ function renderStatCards(data) {
             <div class="stat-icon" style="background: ${opts.iconBg}; box-shadow: 0 8px 20px -8px ${opts.iconGlow}; color:#fff;">
               <span>${opts.icon}</span>
             </div>
-            <span class="trend-chip trend-${trendLabel}">${trendText}</span>
+            ${chipHtml}
           </div>
           <p class="stat-label">${opts.label}</p>
           <div class="flex items-end justify-between gap-3">
-            <div>
+            <div class="min-w-0 flex-1">
               <p class="stat-value ${opts.color}">${opts.value}</p>
-              <p class="stat-sub">${opts.sub}</p>
+              ${breakdownHtml}
             </div>
           </div>
         </div>
       </div>`;
   };
 
+  const unavailableChip = `<span class="trend-chip trend-flat" title="Groww hasn't returned a live price for any holding yet — see the banner above.">No live data</span>`;
+
   el.innerHTML =
     buildCard({
       delay: 40,
       label: "Portfolio Value",
-      value: `<span class="live-dot" style="vertical-align:middle;"></span>${formatINR(data.current_portfolio_value)}`,
-      sub: `<span class="data-invested-label">Invested</span> ${formatINR(data.invested_amount)}`,
+      value: `<span class="live-dot ${liveUnavailable ? "off" : ""}" style="vertical-align:middle;"></span>${formatINR(data.current_portfolio_value)}`,
+      breakdown: [
+        { label: "Invested", value: formatINR(data.invested_amount) },
+        { label: "Current", value: formatINR(data.current_amount) },
+        { label: "Today", value: liveUnavailable ? "—" : formatINR(data.todays_pnl || 0), colorClass: liveUnavailable ? "" : pnlClass(data.todays_pnl || 0) },
+      ],
       color: C.primary,
       icon: "💎",
       iconBg: "var(--brand-500)",
@@ -216,31 +248,33 @@ function renderStatCards(data) {
     buildCard({
       delay: 90,
       label: "Total Return",
-      value: formatINR(data.total_pnl),
-      sub: formatPercent(data.total_pnl_percent),
-      color: pnlClass(data.total_pnl),
+      value: liveUnavailable ? "—" : formatINR(data.total_pnl),
+      sub: liveUnavailable ? "Live prices unavailable" : formatPercent(data.total_pnl_percent),
+      color: liveUnavailable ? C.tertiary : pnlClass(data.total_pnl),
       icon: "📈",
       iconBg: "var(--success-500)",
       iconGlow: "rgba(18,183,106,0.5)",
+      chipHtml: liveUnavailable ? unavailableChip : null,
       trendOverride: data.total_pnl,
       trendText: formatPercent(data.total_pnl_percent),
     }) +
     buildCard({
       delay: 140,
       label: "1-Day Return",
-      value: formatINR(data.todays_pnl || 0),
-      sub: formatPercent(data.todays_pnl_percent || 0),
-      color: pnlClass(data.todays_pnl || 0),
+      value: liveUnavailable ? "—" : formatINR(data.todays_pnl || 0),
+      sub: liveUnavailable ? "Live prices unavailable" : formatPercent(data.todays_pnl_percent || 0),
+      color: liveUnavailable ? C.tertiary : pnlClass(data.todays_pnl || 0),
       icon: "⚡",
       iconBg: "var(--warning-500)",
       iconGlow: "rgba(247,144,9,0.5)",
+      chipHtml: liveUnavailable ? unavailableChip : null,
       trendOverride: data.todays_pnl || 0,
       trendText: formatPercent(data.todays_pnl_percent || 0),
     }) +
     buildCard({
       delay: 190,
       label: "Holdings",
-      value: data.holdings_count ?? "—",
+      value: holdingsCount != null ? `${holdingsCount} ${holdingsCount === 1 ? "Holding" : "Holdings"}` : "—",
       sub: "Active positions",
       color: C.primary,
       icon: "📦",
@@ -252,9 +286,12 @@ function renderStatCards(data) {
 }
 
 // ── Movers ───────────────────────────────────────────────────────────────────
-function renderMovers(gainers, losers) {
+function renderMovers(gainers, losers, liveUnavailable) {
   const gEl = document.getElementById("gainers-list");
   const lEl = document.getElementById("losers-list");
+  const emptyMsg = liveUnavailable
+    ? `<li class="${C.tertiary} text-xs p-2">Live prices unavailable — can't rank movers yet</li>`
+    : null;
 
   const item = (m, sparkId) => {
     const title = m.company_name && m.company_name !== m.symbol
@@ -276,10 +313,10 @@ function renderMovers(gainers, losers) {
 
   gEl.innerHTML = gainers.length
     ? gainers.map((m, i) => item(m, `mv-g-${i}`)).join("")
-    : `<li class="${C.tertiary} text-xs p-2">No gainers</li>`;
+    : (emptyMsg || `<li class="${C.tertiary} text-xs p-2">No gainers</li>`);
   lEl.innerHTML = losers.length
     ? losers.map((m, i) => item(m, `mv-l-${i}`)).join("")
-    : `<li class="${C.tertiary} text-xs p-2">No losers</li>`;
+    : (emptyMsg || `<li class="${C.tertiary} text-xs p-2">No losers</li>`);
 
   // Draw REAL price sparklines for each mover (fetched per symbol, cached).
   gainers.forEach((m, i) => injectSpark(`mv-g-${i}`, m.symbol, m.exchange, 52, 18));
@@ -369,7 +406,7 @@ function renderDonut(slices, totalValue) {
 
   let cumAngle = -Math.PI / 2; // start at top
   const segments = slices.map((s, i) => {
-    const color = COLORS[i % COLORS.length];
+    const color = chartColor(i);
     const percent = Math.max(0, Math.min(100, s.percent || 0));
     const angle = (percent / 100) * Math.PI * 2;
     if (angle === 0) return null;
@@ -428,10 +465,11 @@ function renderDonut(slices, totalValue) {
     </svg>`;
 
   legend.innerHTML = slices.map((s, i) => `
-    <div class="legend-row">
-      <span class="legend-swatch" style="background:${s.color}"></span>
+    <div class="legend-row" title="${escapeHtml(s.label)} — ${formatINR(s.value)} (${s.percent.toFixed(1)}%)">
+      <span class="legend-swatch" style="background:${chartColor(i)}"></span>
       <span class="legend-name">${escapeHtml(s.label)}</span>
       <span class="legend-meta">
+        <span class="legend-value">${formatINR(s.value)}</span>
         <span class="legend-pct">${s.percent.toFixed(1)}%</span>
       </span>
     </div>`).join("");
@@ -460,7 +498,8 @@ function renderPnlBars(holdings) {
   el.innerHTML = items.map((h, i) => {
     const isPos = (h.pnl || 0) >= 0;
     const pct = Math.min(100, (Math.abs(h.pnl || 0) / maxAbs) * 100);
-    const barColor = isPos ? "var(--success-500)" : "var(--error-500)";
+    // Direction color comes from the static .pnl-row-bar.up/.down CSS rules
+    // (theme-aware via --gw-gain/--gw-loss) — no per-row inline style needed.
     const barInner = isPos
       ? `<div class="pnl-row-bar up" style="width:${pct}%;"></div>`
       : `<div class="pnl-row-bar down" style="width:${pct}%; margin-left:auto;"></div>`;
@@ -482,10 +521,7 @@ function renderPnlBars(holdings) {
         <div class="pnl-row-val ${isPos ? 'up' : 'down'}" style="grid-column:3;">
           ${formatINR(h.pnl)}
         </div>
-      </div>
-      <style>
-        .pnl-row-bar { background: ${barColor}; opacity: .7; }
-      </style>`;
+      </div>`;
   }).join("");
 }
 
@@ -497,11 +533,16 @@ function renderAnalysis(holdings, data) {
     return;
   }
 
+  const liveUnavailable = isLiveDataUnavailable(data, holdings.length);
+
   const sorted = [...holdings].filter(h => h.pnl_percent != null)
     .sort((a, b) => (b.pnl_percent || 0) - (a.pnl_percent || 0));
 
-  const best = sorted[0];
-  const worst = sorted[sorted.length - 1];
+  // With every holding's return honestly at 0% (no live prices yet), there
+  // is no real "best"/"worst" to report — picking one from a tie would be
+  // misleading, so that comparison is skipped entirely in this state.
+  const best = liveUnavailable ? null : sorted[0];
+  const worst = liveUnavailable ? null : sorted[sorted.length - 1];
 
   const totalInvested = holdings.reduce((s, h) => s + (h.invested_value || 0), 0);
   const N = holdings.length;
@@ -540,21 +581,34 @@ function renderAnalysis(holdings, data) {
     ? formatPercent(((topHolding.invested_value || 0) / Math.max(totalInvested, 0.0001)) * 100)
     : "";
 
-  const bestTitle = best.company_name && best.company_name !== best.symbol
+  const bestTitle = best && best.company_name && best.company_name !== best.symbol
     ? escapeHtml(best.company_name)
-    : escapeHtml(best.symbol);
-  const bestSub = best.company_name && best.company_name !== best.symbol
+    : (best ? escapeHtml(best.symbol) : "");
+  const bestSub = best && best.company_name && best.company_name !== best.symbol
     ? `${escapeHtml(best.symbol)} · P&L: ${formatINR(best.pnl || 0)}`
-    : `P&L: ${formatINR(best.pnl || 0)}`;
+    : (best ? `P&L: ${formatINR(best.pnl || 0)}` : "");
 
-  const worstTitle = worst.company_name && worst.company_name !== worst.symbol
+  const worstTitle = worst && worst.company_name && worst.company_name !== worst.symbol
     ? escapeHtml(worst.company_name)
-    : escapeHtml(worst.symbol);
-  const worstSub = worst.company_name && worst.company_name !== worst.symbol
+    : (worst ? escapeHtml(worst.symbol) : "");
+  const worstSub = worst && worst.company_name && worst.company_name !== worst.symbol
     ? `${escapeHtml(worst.symbol)} · P&L: ${formatINR(worst.pnl || 0)}`
-    : `P&L: ${formatINR(worst.pnl || 0)}`;
+    : (worst ? `P&L: ${formatINR(worst.pnl || 0)}` : "");
+
+  const liveDataNoticeCard = cardHTML({
+    eyebrow: "Best / Worst Performer",
+    chipCls: "trend-flat",
+    chipLabel: "No live data",
+    emoji: "📡",
+    iconType: "quality",
+    iconBg: "var(--gray-500)",
+    title: "Awaiting live prices",
+    subtitle: "Groww hasn't returned a live price for any holding yet",
+    note: "Once live market-data access is available for this account, the best and worst performers will show here automatically.",
+  });
 
   el.innerHTML =
+    (liveUnavailable ? liveDataNoticeCard :
     (best ? cardHTML({
       eyebrow: "Best Performer",
       chipCls: best.pnl_percent >= 0 ? "trend-up" : "trend-down",
@@ -578,7 +632,7 @@ function renderAnalysis(holdings, data) {
       title: worstTitle,
       subtitle: worstSub,
       note: "Largest drag on returns. Revisit the investment thesis and check for sector/company-specific news.",
-    }) : "") +
+    }) : "")) +
     cardHTML({
       eyebrow: "Diversification",
       chipCls: diversityRating.cls,
@@ -595,9 +649,9 @@ function renderAnalysis(holdings, data) {
 }
 
 // ── Holdings Preview Table ───────────────────────────────────────────────────
-async function renderHoldingsPreview() {
+async function renderHoldingsPreview(opts = {}) {
   const el = document.getElementById("holdings-preview");
-  showSpinner(el);
+  if (!opts.silent) showSpinner(el);
   try {
     const data = await API.getHoldings();
     const all = data.holdings || [];
@@ -693,60 +747,67 @@ async function renderHoldingsPreview() {
 }
 
 // ── Main loader ──────────────────────────────────────────────────────────────
-async function loadDashboard() {
-  // Fresh prices on every (re)load — drop any cached history.
-  _historyCache.clear();
+// silent=true is used for interval auto-refresh: it fetches fresh data and
+// re-renders in place (same render functions, same DOM containers) without
+// first wiping everything to skeletons — that skeleton flash is what made
+// the periodic refresh look like a full page reload. Skeletons + the
+// "refreshed" toast still show on first load and on the manual Refresh click.
+async function loadDashboard(opts = {}) {
+  const silent = !!opts.silent;
 
-  // Skeletons
-  document.getElementById("stat-cards").innerHTML = skeletonCards(4);
-  document.getElementById("holdings-trend").innerHTML = Array.from({length: 4}, () => `
-    <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4 h-40 skeleton"></div>`).join("");
-  document.getElementById("gainers-list").innerHTML = `<li class="skeleton h-10 w-full rounded"></li>`.repeat(3);
-  document.getElementById("losers-list").innerHTML  = `<li class="skeleton h-10 w-full rounded"></li>`.repeat(3);
-  document.getElementById("donut-chart").innerHTML = `<div class="w-full aspect-square max-w-[260px] mx-auto skeleton rounded-full"></div>`;
-  document.getElementById("donut-legend").innerHTML = `<div class="skeleton h-4 w-full mb-2 rounded"></div><div class="skeleton h-4 w-5/6 mb-2 rounded"></div><div class="skeleton h-4 w-4/6 rounded"></div>`;
-  document.getElementById("pnl-bars").innerHTML = Array.from({length: 6}, () => `
-    <div><div class="skeleton h-3 w-1/3 mb-1.5 rounded"></div><div class="skeleton h-2.5 w-full rounded"></div></div>`).join("");
-  document.getElementById("analysis-row").innerHTML = Array.from({length: 3}, () => `
-    <div class="rounded-xl p-5 h-40 skeleton"></div>`).join("");
+  if (!silent) {
+    _historyCache.clear(); // force fresh price history only on an explicit refresh
+
+    document.getElementById("stat-cards").innerHTML = skeletonCards(4);
+    document.getElementById("holdings-trend").innerHTML = Array.from({length: 4}, () => `
+      <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4 h-40 skeleton"></div>`).join("");
+    document.getElementById("gainers-list").innerHTML = `<li class="skeleton h-10 w-full rounded"></li>`.repeat(3);
+    document.getElementById("losers-list").innerHTML  = `<li class="skeleton h-10 w-full rounded"></li>`.repeat(3);
+    document.getElementById("donut-chart").innerHTML = `<div class="w-full aspect-square max-w-[260px] mx-auto skeleton rounded-full"></div>`;
+    document.getElementById("donut-legend").innerHTML = `<div class="skeleton h-4 w-full mb-2 rounded"></div><div class="skeleton h-4 w-5/6 mb-2 rounded"></div><div class="skeleton h-4 w-4/6 rounded"></div>`;
+    document.getElementById("pnl-bars").innerHTML = Array.from({length: 6}, () => `
+      <div><div class="skeleton h-3 w-1/3 mb-1.5 rounded"></div><div class="skeleton h-2.5 w-full rounded"></div></div>`).join("");
+    document.getElementById("analysis-row").innerHTML = Array.from({length: 3}, () => `
+      <div class="rounded-xl p-5 h-40 skeleton"></div>`).join("");
+  }
 
   // Fetch connection status independently
   renderConnectionStatus().catch(err => console.error("Diag failed", err));
 
   try {
-    const data = await API.getDashboard();
-    renderStatCards(data);
-    renderMovers(data.top_gainers || [], data.top_losers || []);
+    // Fetch both in parallel — /dashboard doesn't include a holdings count,
+    // and /holdings feeds P&L bars, analysis, and the trend grid anyway.
+    const [dashResult, holdResult] = await Promise.allSettled([API.getDashboard(), API.getHoldings()]);
+    if (dashResult.status !== "fulfilled") throw dashResult.reason || new Error("Could not load dashboard");
+    const data = dashResult.value;
+    const holdings = holdResult.status === "fulfilled" ? (holdResult.value.holdings || []) : [];
+
+    renderStatCards(data, holdings.length);
+    renderMovers(data.top_gainers || [], data.top_losers || [], isLiveDataUnavailable(data, holdings.length));
     renderDonut(data.portfolio_allocation || [], data.current_portfolio_value);
-
-    // Fetch holdings for P&L bars & analysis (same call feeds preview too)
-    let holdings = [];
-    try {
-      const hData = await API.getHoldings();
-      holdings = hData.holdings || [];
-    } catch (_) { /* dashboard still usable */ }
-
     renderPnlBars(holdings);
     renderAnalysis(holdings, data);
     renderHoldingsTrend(holdings);
 
     document.getElementById("last-updated").textContent =
       "Updated " + new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" });
-    showToast("Dashboard refreshed", "success", 2000);
+    if (!silent) showToast("Dashboard refreshed", "success", 2000);
   } catch (err) {
-    showToast(err.message, "error");
-    showError(document.getElementById("stat-cards"), err.message);
+    if (!silent) {
+      showToast(err.message, "error");
+      showError(document.getElementById("stat-cards"), err.message);
+    }
   }
 
   // Holdings preview (independent)
-  renderHoldingsPreview();
+  renderHoldingsPreview({ silent });
 }
 
 // ── Auto-refresh ──────────────────────────────────────────────────────────────
 let _refreshTimer = null;
 function startAutoRefresh() {
   if (CONFIG.REFRESH_INTERVAL_MS > 0) {
-    _refreshTimer = setInterval(loadDashboard, CONFIG.REFRESH_INTERVAL_MS);
+    _refreshTimer = setInterval(() => loadDashboard({ silent: true }), CONFIG.REFRESH_INTERVAL_MS);
   }
 }
 
